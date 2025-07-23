@@ -125,9 +125,10 @@ p {
 }
 
 .social-icons .icon {
-    width: 30px;
-    height: 30px;
-    background-color: var(--secondary-color); /* Placeholder for actual icons */
+    width: 22px;
+    padding: 3px;
+    height: 24px;
+    background-color: black; /* Placeholder for actual icons */
     border-radius: 50%;
     display: flex;
     justify-content: center;
@@ -212,6 +213,7 @@ p {
 
 .Download-button:hover {
     background: darken(var(--primary-color), 10%); /* Subtle darker on hover */
+    color: black;
     box-shadow: 0 8px 20px rgba(255, 166, 1, 0.5);
     transform: translateY(-3px);
 }
@@ -281,7 +283,6 @@ p {
     width: 250px;
     height: 250px;
     border-radius: 50%;
-    border: 5px solid var(--primary-color);
     box-shadow: 0 5px 20px rgba(0, 0, 0, 0.2);
     animation: pulse 2s infinite alternate;
 }
@@ -316,6 +317,7 @@ p {
     background-color: darken(var(--primary-color), 10%);
     transform: translateY(-2px);
     box-shadow: 0 6px 15px rgba(255, 166, 1, 0.5);
+    color: orange;
 }
 
 /* My Services Section */
@@ -411,8 +413,7 @@ p {
 .icon-logo {
     display: block;
     width: 30px;
-    height: 30px;
-    background-color: var(--primary-color); /* Placeholder for logo */
+    height: 30px; /* Placeholder for logo */
     border-radius: 50%;
 }
 
@@ -437,6 +438,7 @@ p {
 
 .nav-button:hover {
     background-color: var(--primary-color);
+    
     transform: scale(1.1);
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
 }
@@ -444,7 +446,8 @@ p {
 .nav-button:hover svg path,
 .nav-button:hover svg rect,
 .nav-button:hover svg circle {
-    fill: var(--background-white); /* Change icon color on hover */
+     /* Change icon color on hover */
+
     transition: fill 0.2s ease;
 }
 
@@ -582,4 +585,16 @@ p {
         width: 120px;
         height: 120px;
     }
+}
+.icon-nav .nav-button svg {
+    width: 24px; /* Taille fixe pour les icônes de navigation */
+    height: 24px; /* Hauteur fixe pour les icônes de navigation */
+    fill: var(--secondary-color); /* Couleur de l'icône SVG par défaut */
+    transition: fill 0.2s ease;
+}
+
+.icon-nav .nav-button:hover svg path,
+.icon-nav .nav-button:hover svg rect,
+.icon-nav .nav-button:hover svg circle {
+   /* Change la couleur de l'icône en blanc au survol */
 }

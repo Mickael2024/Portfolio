@@ -1,10 +1,14 @@
 body{
-    width: 95%;
+    width: 100%;
     margin: auto;
     font-family: calibri;
+    background-color: #e1e1e1;
 }
 img{
     object-fit: cover;
+}
+button{
+    cursor: pointer;
 }
 .case{
     img{
@@ -14,11 +18,25 @@ img{
     }
 }
 .header{
+    
+    background: white;
+    width: 95%;
+    position: relative;
+    /* right: 50%; */
+    left: 2%;
+
     img{
         max-width: 100%;
         width: 250px;
         height: 250px;
     }
+    .inside_header{
+    display: flex;
+    justify-content: space-around;
+    align-items: flex-start;
+   
+    margin: 0px 10px 10px;
+}
 }
 .profil_img{
     img{
@@ -30,6 +48,7 @@ img{
 .side{
     display: flex;
     align-items: stretch;
+    margin: 0px 10px 10px;
 }
 .case_service{
     display: grid;
@@ -41,4 +60,37 @@ img{
     display: flex;
     gap: 25px;
     flex-direction: column;
+}
+.btn_more{
+    position: relative;
+    width: fit-content;
+    button{
+        padding: 7px;
+        width: 90px;
+        background-color: orange;
+        font-family: sans-serif;
+        border: none;
+    }
+}
+.header_service{
+    
+}
+.sideLeft{
+    width: 20%;
+    background-color: white;
+    padding: 10px;
+    height: 100vh;
+    position: fixed;
+}
+.sideRight{
+    background-color: white;
+    padding: 10px;
+    height: 100vh;
+    position: fixed;
+    right: 0px;
+}
+.sideCenter{
+    width: 60%;
+    margin-left: 15%;
+    padding: 0px 10px;
 }

@@ -1,218 +1,184 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="./css/designe.css">
-    <title>Document</title>
+    <title>Jean Mickael - Portfolio</title>
 </head>
-
 <body>
     <section class="container">
-        <div class="side">
-            <div class="sideLeft">
-                <div>
-                    <div class="profil_img">
-                        <div style="width: fit-content;">
-                            <img src="./image/291c3ed0-9e93-4956-9f8b-bd8ee372b28e-Photoroom.png" alt="profil"
-                                width="150px" height="150px">
+        <div class="side side-left">
+            <div class="profile-section">
+                <div class="profile-img">
+                    <img src="./image/291c3ed0-9e93-4956-9f8b-bd8ee372b28e-Photoroom.png" alt="Profile Picture">
+                </div>
+                <h3>Jean Mickael</h3>
+                <span class="separator"></span>
+                <div class="social-icons">
+                    <span class="icon"></span>
+                    <span class="icon"></span>
+                    <span class="icon"></span>
+                    <span class="icon"></span>
+                    <span class="icon"></span>
+                    <span class="icon"></span>
+                </div>
+                <div class="skills-section">
+                    <h1>Compétences</h1>
+                    <label for="html-progress">HTML</label>
+                    <div class="progress-container">
+                        <div class="progress-bar" id="html-progress" style="width: 90%;"></div>
+                    </div>
+                    <label for="css-progress">CSS</label>
+                    <div class="progress-container">
+                        <div class="progress-bar" id="css-progress" style="width: 90%;"></div>
+                    </div>
+                    <label for="js-progress">JS</label>
+                    <div class="progress-container">
+                        <div class="progress-bar" id="js-progress" style="width: 70%;"></div>
+                    </div>
+                    <label for="php-progress">PHP</label>
+                    <div class="progress-container">
+                        <div class="progress-bar" id="php-progress" style="width: 60%;"></div>
+                    </div>
+                </div>
+                <div class="languages-section">
+                    <h1>Langues</h1>
+                    <label for="french-progress">Français</label>
+                    <div class="progress-container">
+                        <div class="progress-bar" id="french-progress" style="width: 80%;"></div>
+                    </div>
+                    <label for="english-progress">Anglais</label>
+                    <div class="progress-container">
+                        <div class="progress-bar" id="english-progress" style="width: 50%;"></div>
+                    </div>
+                </div>
+                <div class="btn-download">
+                    <button class="Download-button">
+                        <svg xmlns="http://www.w3.org/2000/svg" height="16" width="20" viewBox="0 0 640 512">
+                            <path d="M144 480C64.5 480 0 415.5 0 336c0-62.8 40.2-116.2 96.2-135.9c-.1-2.7-.2-5.4-.2-8.1c0-88.4 71.6-160 160-160c59.3 0 111 32.2 138.7 80.2C409.9 102 428.3 96 448 96c53 0 96 43 96 96c0 12.2-2.3 23.8-6.4 34.6C596 238.4 640 290.1 640 352c0 70.7-57.3 128-128 128H144zm79-167l80 80c9.4 9.4 24.6 9.4 33.9 0l80-80c9.4-9.4 9.4-24.6 0-33.9s-24.6-9.4-33.9 0l-39 39V184c0-13.3-10.7-24-24-24s-24 10.7-24 24V318.1l-39-39c-9.4-9.4-24.6-9.4-33.9 0s-9.4 24.6 0 33.9z"
+                                fill="white"></path>
+                        </svg>
+                        <span>Télécharger CV</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+        <div class="side side-center">
+            <div class="header">
+                <div class="inside-header">
+                    <div class="header-content">
+                        <h1>Je m'appelle <strong>NGEVA Jean <span class="highlight">Mickael,</span></strong></h1>
+                        <p>développeur passionné par la création de solutions web modernes : <strong>Front-end</strong> et <strong>Backend</strong>.
+                            <br>Passionné par le développement web, j’ai appris en autodidacte à créer des sites
+                            modernes et adaptés aux besoins des utilisateurs.
+                        </p>
+                        <div class="btn-more">
+                            <button class="hire-me-button">M'embaucher</button>
                         </div>
                     </div>
-                    <h3>Jean Mickael</h3>
-                    <span></span>
-                    <div>
-                        <span class="icon"></span>
-                        <span class="icon"></span>
-                        <span class="icon"></span>
-                        <span class="icon"></span>
-                        <span class="icon"></span>
-                        <span class="icon"></span>
-                    </div>
-                    <div>
-                        <!--En attent  -->
-                    </div>
-                    <div class="langue">
-                        <h1>compétences</h1>
-                        <label>HTML</label>
-                        <div class="progress-container">
-                            <div class="progress-bar-html" style="width: 90%;"></div>
-                        </div>
-                        <label>CSS</label>
-                        <div class="progress-container">
-                            <div class="progress-bar-css" style="width: 90%;"></div>
-                        </div>
-                        <label>JS</label>
-                        <div class="progress-container">
-                            <div class="progress-bar-js" style="width: 70%;"></div>
-                        </div>
-                        <label>PHP</label>
-                        <div class="progress-container">
-                            <div class="progress-bar-php" style="width: 60%;"></div>
-                        </div>
-                    </div>
-                    <div>
-                        <h1>Langues</h1>
-                        <label>Françai</label>
-                        <div class="progress-container">
-                            <div class="progress-bar-html" style="width: 80%;"></div>
-                        </div>
-                        <label>Anglais</label>
-                        <div class="progress-container">
-                            <div class="progress-bar-css" style="width: 50%;"></div>
-                        </div>
-                    </div>
-                    <div class="btn-download">
-                        <!-- From Uiverse.io by vinodjangid07 -->
-                        <button class="Download-button">
-                            <svg xmlns="http://www.w3.org/2000/svg" height="16" width="20" viewBox="0 0 640 512">
-                                <path
-                                    d="M144 480C64.5 480 0 415.5 0 336c0-62.8 40.2-116.2 96.2-135.9c-.1-2.7-.2-5.4-.2-8.1c0-88.4 71.6-160 160-160c59.3 0 111 32.2 138.7 80.2C409.9 102 428.3 96 448 96c53 0 96 43 96 96c0 12.2-2.3 23.8-6.4 34.6C596 238.4 640 290.1 640 352c0 70.7-57.3 128-128 128H144zm79-167l80 80c9.4 9.4 24.6 9.4 33.9 0l80-80c9.4-9.4 9.4-24.6 0-33.9s-24.6-9.4-33.9 0l-39 39V184c0-13.3-10.7-24-24-24s-24 10.7-24 24V318.1l-39-39c-9.4-9.4-24.6-9.4-33.9 0s-9.4 24.6 0 33.9z"
-                                    fill="white"></path>
-                            </svg>
-                            <span>Download CV</span>
-                        </button>
-
+                    <div class="big-img">
+                        <img src="./image/291c3ed0-9e93-4956-9f8b-bd8ee372b28e-Photoroom.png" alt="Jean Mickael Profile">
                     </div>
                 </div>
             </div>
-            <div class="sideCenter">
-                <div class="header">
-                    <div class="inside_header">
-                        <div style="width: 50%;">
-                            <h1>Je m'appelle <strong>NGEVA Jean <span style="color: orange;">Mickael,</span></strong>
-                            </h1>
 
-                            <p>développeur passionné par la création de solutions web modernes<strong> Front-end,
-                                    Backend</strong><br />
-                                Passionné par le développement web, j’ai appris en autodidacte à créer des sites
-                                modernes et adaptés aux besoins des utilisateurs
-                            </p>
-
-                            <div class="btn_more">
-                                <button>embauche-moi</button>
-                            </div>
-                        </div>
-                        <div class="big-img">
-                            <img src="./image/291c3ed0-9e93-4956-9f8b-bd8ee372b28e-Photoroom.png" alt="" width=""
-                                height="">
-                        </div>
-                    </div>
+            <div class="my-services">
+                <div class="header-service">
+                    <h1>Mes Services</h1>
+                    <p>Découvrez les services que je propose pour transformer vos idées en réalité web. Mon objectif est de créer des solutions robustes, esthétiques et fonctionnelles.</p>
                 </div>
 
-                <div class="my_service">
-                    <div class="header_service">
-                        <h1>My Services</h1>
-                        <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Fugiat itaque earum cum autem
-                            inventore quam iste nisi exercitationem voluptate, voluptatem labore odit quisquam deleniti
-                            vitae, tempora iusto hic doloremque voluptas.</p>
+                <div class="service-grid">
+                    <div class="service-case">
+                        <img src="./image/ashley-harris-EemPcMwKjuM-unsplash.jpg" alt="Web Development">
+                        <h3>Développement Web</h3>
+                        <span>Création de sites et applications web sur mesure.</span>
                     </div>
-
-                    <div class="case_service">
-                        <div class="case">
-                            <img src="./image/ashley-harris-EemPcMwKjuM-unsplash.jpg" alt="" width="250px"
-                                height="250px">
-                            <h3>Web Developement</h3>
-                            <span>title</span>
-                        </div>
-                        <div class="case">
-                            <img src="./image/jakub-zerdzicki-_0T3hgs3lig-unsplash.jpg" alt="" width="250px"
-                                height="250px">
-                            <h3>UI/Designe</h3>
-                            <span>Title</span>
-                        </div>
-                        <div class="case">
-                            <img src="./image/home (1).jpg" alt="" width="250px" height="250px">
-                            <h3>Web Developement</h3>
-                            <span>title</span>
-                        </div>
-                        <div class="case">
-                            <img src="./image/home (2).jpg" alt="" width="250px" height="">
-                            <h3>Web Developement</h3>
-                            <span>title</span>
-                        </div>
-                        <div class="case">
-                            <img src="./image/home (3).jpg" alt="" width="" height="">
-                            <h3>Web Developement</h3>
-                            <span>title</span>
-                        </div>
-                        <div class="case">
-                            <img src="./image/Décoration moderne et épurée dans véranda.jpeg" alt="" width="" height="">
-                            <h3>Web Developement</h3>
-                            <span>title</span>
-                        </div>
+                    <div class="service-case">
+                        <img src="./image/jakub-zerdzicki-_0T3hgs3lig-unsplash.jpg" alt="UI/UX Design">
+                        <h3>UI/UX Design</h3>
+                        <span>Conception d'interfaces utilisateur intuitives et esthétiques.</span>
+                    </div>
+                    <div class="service-case">
+                        <img src="./image/home (1).jpg" alt="Responsive Design">
+                        <h3>Design Responsif</h3>
+                        <span>Sites web adaptés à tous les appareils.</span>
+                    </div>
+                    <div class="service-case">
+                        <img src="./image/home (2).jpg" alt="Backend Development">
+                        <h3>Développement Backend</h3>
+                        <span>Construction de l'architecture serveur et des bases de données.</span>
+                    </div>
+                    <div class="service-case">
+                        <img src="./image/home (3).jpg" alt="Maintenance & Support">
+                        <h3>Maintenance & Support</h3>
+                        <span>Assistance et mise à jour de vos projets web.</span>
+                    </div>
+                    <div class="service-case">
+                        <img src="./image/Décoration moderne et épurée dans véranda.jpeg" alt="E-commerce Solutions">
+                        <h3>Solutions E-commerce</h3>
+                        <span>Mise en place de boutiques en ligne performantes.</span>
                     </div>
                 </div>
             </div>
-            <div class="sideRight">
-                <div>
-                    <div class="icon_header">
-                        <span class="icon_logo"></span>
-                    </div>
-                    <div class="icon_nav">
-                        <button>
-                            <a href="#">
-                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none"
-                                    xmlns="http://www.w3.org/2000/svg">
-                                    <rect x="0" y="0" width="24" height="24" rx="12" fill="#F0F0F0" />
-                                    <path
-                                        d="M12 2L3 9H6V20H18V9H21L12 2ZM12 5.69L17.71 10.39H6.29L12 5.69ZM8 12H10V18H8V12ZM14 12H16V18H14V12Z"
-                                        fill="black" />
-                                </svg>
-                            </a>
-                        </button>
-                        <button>
-                            <a href="#">
-                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none"
-                                    xmlns="http://www.w3.org/2000/svg">
-                                    <circle cx="12" cy="12" r="11" fill="#F0F0F0" />
-                                    <path
-                                        d="M14 2H6C4.9 2 4 2.9 4 4V20C4 21.1 4.9 22 6 22H18C19.1 22 20 21.1 20 20V8L14 2ZM18 20H6V4H13V9H18V20ZM10 10H8V12H10V10ZM10 14H8V16H10V14ZM10 18H8V20H10V18Z"
-                                        fill="#606060" />
-                                </svg>
-                            </a>
-                        </button>
-                        <button>
-                            <a href="#">
-                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none"
-                                    xmlns="http://www.w3.org/2000/svg">
-                                    <circle cx="12" cy="12" r="11" fill="#F0F0F0" />
-                                    <path d="M12 3L1 9L12 15L23 9L12 3ZM5 12V16.5L12 20.5L19 16.5V12L12 16L5 12Z"
-                                        fill="#606060" />
-                                </svg>
-                            </a></button>
-                        <button>
-                            <a href="#">
-                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none"
-                                    xmlns="http://www.w3.org/2000/svg">
-                                    <circle cx="12" cy="12" r="11" fill="#F0F0F0" />
-                                    <path
-                                        d="M19 10H15V6H9V10H5L12 17L19 10ZM7 12V14H9V12H7ZM11 12V14H13V12H11ZM15 12V14H17V12H15Z"
-                                        fill="#606060" />
-                                </svg></a></button>
-                        <button>
-                            <a href="#">
-                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none"
-                                    xmlns="http://www.w3.org/2000/svg">
-                                    <circle cx="12" cy="12" r="11" fill="#F0F0F0" />
-                                    <path
-                                        d="M14.06 9.06L14.94 8.19L16.81 10.06L15.94 10.94L14.06 9.06ZM17.66 3.66L18.34 4.34C19.12 5.12 19.12 6.38 18.34 7.16L9.16 16.34L7.84 16.66L8.16 15.34L17.34 6.16C18.12 5.38 18.12 4.12 17.34 3.34L16.66 2.66C15.88 1.88 14.62 1.88 13.84 2.66L5 11.5V15H8.5L17.34 6.16L17.66 3.66ZM3 19H21V21H3V19Z"
-                                        fill="#606060" />
-                                </svg>
-                            </a></button>
-                        <button>
-                            <a href="#">
-                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none"
-                                    xmlns="http://www.w3.org/2000/svg">
-                                    <circle cx="12" cy="12" r="11" fill="#F0F0F0" />
-                                    <path d="M4 9H8V20H4V9ZM10 4H14V20H10V4ZM16 13H20V20H16V13Z" fill="#606060" />
-                                </svg>
-                            </a>
-                        </button>
-                    </div>
-                </div>
+        </div>
+        <div class="side side-right">
+            <div class="icon-header">
+                <span class="icon-logo"></span>
             </div>
+            <div class="icon-nav">
+                <button class="nav-button">
+                    <a href="#">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <rect x="0" y="0" width="24" height="24" rx="12" fill="#F0F0F0" />
+                            <path d="M12 2L3 9H6V20H18V9H21L12 2ZM12 5.69L17.71 10.39H6.29L12 5.69ZM8 12H10V18H8V12ZM14 12H16V18H14V12Z"
+                                fill="black" />
+                        </svg>
+                    </a>
+                </button>
+                <button class="nav-button">
+                    <a href="#">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <circle cx="12" cy="12" r="11" fill="#F0F0F0" />
+                            <path d="M14 2H6C4.9 2 4 2.9 4 4V20C4 21.1 4.9 22 6 22H18C19.1 22 20 21.1 20 20V8L14 2ZM18 20H6V4H13V9H18V20ZM10 10H8V12H10V10ZM10 14H8V16H10V14ZM10 18H8V20H10V18Z"
+                                fill="#606060" />
+                        </svg>
+                    </a>
+                </button>
+                <button class="nav-button">
+                    <a href="#">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <circle cx="12" cy="12" r="11" fill="#F0F0F0" />
+                            <path d="M12 3L1 9L12 15L23 9L12 3ZM5 12V16.5L12 20.5L19 16.5V12L12 16L5 12Z"
+                                fill="#606060" />
+                        </svg>
+                    </a></button>
+                <button class="nav-button">
+                    <a href="#">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <circle cx="12" cy="12" r="11" fill="#F0F0F0" />
+                            <path d="M19 10H15V6H9V10H5L12 17L19 10ZM7 12V14H9V12H7ZM11 12V14H13V12H11ZM15 12V14H17V12H15Z"
+                                fill="#606060" />
+                        </svg></a></button>
+                <button class="nav-button">
+                    <a href="#">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <circle cx="12" cy="12" r="11" fill="#F0F0F0" />
+                            <path d="M14.06 9.06L14.94 8.19L16.81 10.06L15.94 10.94L14.06 9.06ZM17.66 3.66L18.34 4.34C19.12 5.12 19.12 6.38 18.34 7.16L9.16 16.34L7.84 16.66L8.16 15.34L17.34 6.16C18.12 5.38 18.12 4.12 17.34 3.34L16.66 2.66C15.88 1.88 14.62 1.88 13.84 2.66L5 11.5V15H8.5L17.34 6.16L17.66 3.66ZM3 19H21V21H3V19Z"
+                                fill="#606060" />
+                        </svg>
+                    </a></button>
+                <button class="nav-button">
+                    <a href="#">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <circle cx="12" cy="12" r="11" fill="#F0F0F0" />
+                            <path d="M4 9H8V20H4V9ZM10 4H14V20H10V4ZM16 13H20V20H16V13Z" fill="#606060" />
+                        </svg>
+                    </a>
+                </button>
+            </div>
+        </div>
     </section>
 </body>
-
 </html>

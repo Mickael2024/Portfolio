@@ -1,0 +1,44 @@
+body{
+    width: 95%;
+    margin: auto;
+    font-family: calibri;
+}
+img{
+    object-fit: cover;
+}
+.case{
+    img{
+        max-width: 100%;
+        width: 150px;
+        height: 150px;
+    }
+}
+.header{
+    img{
+        max-width: 100%;
+        width: 250px;
+        height: 250px;
+    }
+}
+.profil_img{
+    img{
+        max-width: 100%;
+        width: 100px;
+        height: 100px;
+    }
+}
+.side{
+    display: flex;
+    align-items: stretch;
+}
+.case_service{
+    display: grid;
+        grid-template-columns: repeat(3, 207px);
+        gap: 15px;
+        justify-content: center;
+}
+.icon_nav{
+    display: flex;
+    gap: 25px;
+    flex-direction: column;
+}

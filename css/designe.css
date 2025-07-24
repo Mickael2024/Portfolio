@@ -92,6 +92,9 @@
     .my-services.active{
         opacity: 1;
     }
+    .my-parcours.active{
+        opacity: 1;
+    }
     /* Left Sidebar */
     .side-left {
         width: 250px; /* Adjusted fixed width */
@@ -377,6 +380,40 @@
         color: var(--secondary-color);
     }
 
+
+    .my-parcours {
+        padding: 20px;
+        opacity: 0;
+        transition: transform 1.2s ease-in-out, opacity 1.2s ease-in-out;
+        background: var(--background-white);
+        border-radius: var(--border-radius);
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+    }
+    .service-case{
+        cursor: pointer;
+    }
+    .parcours-case{
+        cursor: pointer;
+    }
+
+    .header-parcours {
+        text-align: center;
+        margin-bottom: 30px;
+        padding: 0 20px;
+    }
+
+    .header-parcours h1 {
+        font-size: 2em;
+        color: var(--primary-color);
+        margin-bottom: 10px;
+    }
+
+    .header-parcours p {
+        max-width: 700px;
+        margin: 0 auto;
+        color: var(--secondary-color);
+    }
+
     .service-grid {
         display: grid;
             grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -420,6 +457,44 @@
     }
 
     .service-case span {
+        font-size: 0.9em;
+        color: var(--secondary-color);
+    }
+    
+    .parcours-case {
+        text-align: center;
+        background-color: var(--background-light);
+        padding: 20px;
+        border-radius: var(--border-radius);
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .parcours-case:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+    }
+
+    .parcours-case img {
+        width: 150px;
+        height: 150px;
+        border-radius: 50%;
+        margin: 0 auto 15px;
+        border: 3px solid var(--primary-color);
+        transition: border-color 0.3s ease;
+    }
+
+    .parcours-case:hover img {
+        border-color: darken(var(--primary-color), 15%);
+    }
+
+    .parcours-case h3 {
+        font-size: 1.3em;
+        margin-bottom: 8px;
+        color: var(--primary-color);
+    }
+
+    .parcours-case span {
         font-size: 0.9em;
         color: var(--secondary-color);
     }
@@ -518,6 +593,10 @@
             grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
             gap: 20px;
         }
+        .parcours-grid {
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 20px;
+        }
     }
 
     @media (max-width: 768px) {
@@ -573,6 +652,10 @@
             grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
             gap: 15px;
         }
+        .parcours-grid {
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+        }
     }
 
     @media (max-width: 480px) {
@@ -615,8 +698,16 @@
             grid-template-columns: 1fr; /* Single column on very small screens */
             padding: 0 5px;
         }
+        .parcours-grid {
+            grid-template-columns: 1fr; /* Single column on very small screens */
+            padding: 0 5px;
+        }
 
         .service-case img {
+            width: 120px;
+            height: 120px;
+        }
+        .parcours-case img {
             width: 120px;
             height: 120px;
         }
@@ -641,6 +732,13 @@
     /* 'infinite' pour qu'elle se répète sans fin */
     /* 'alternate' pour que l'animation revienne en arrière au lieu de recommencer brusquement */
 }
+.parcours-case.active {
+    /* Nous allons utiliser l'animation 'slideInfinite' */
+    animation: slideInfinite 6s ease-in-out infinite alternate;
+    /* Ajustez la durée (6s) et le timing (ease-in-out) selon vos préférences */
+    /* 'infinite' pour qu'elle se répète sans fin */
+    /* 'alternate' pour que l'animation revienne en arrière au lieu de recommencer brusquement */
+}
 
 /* Définition des keyframes pour l'animation */
 @keyframes slideInfinite {
@@ -655,7 +753,108 @@
         transform: translateX(0); /* Retour à la position de départ */
     }
 }
+
 mark{
     background-color: orange;
     padding: 3px;
+}
+.popup-overlay {
+    display: none; /* Cache le pop-up par défaut */
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.6); /* Fond semi-transparent */
+    justify-content: center;
+    align-items: center;
+    z-index: 1000; /* Assure que le pop-up est au-dessus de tout */
+    animation: fadeIn 0.3s ease-in-out; /* Animation d'apparition */
+}
+
+.popup-content {
+    background: var(--background-white);
+    color: var(--text-dark);
+    padding: 60px;
+    border-radius: 10px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+    position: relative;
+    max-width: 500px;
+    width: 90%;
+    text-align: center;
+    animation: slideIn 0.4s ease-out; /* Animation d'entrée du contenu */
+}
+
+.close-btn {
+    position: absolute;
+    top: 15px;
+    right: 20px;
+    font-size: 30px;
+    cursor: pointer;
+    color: #888;
+    transition: color 0.2s ease;
+}
+
+.close-btn:hover {
+    color: #333;
+}
+
+.popup-content h2 {
+    color: #007bff;
+    margin-top: 0;
+    margin-bottom: 20px;
+}
+
+.popup-content p {
+    line-height: 1.6;
+    margin-bottom: 25px;
+}
+
+.popup-action-btn {
+    background-color: #28a745;
+    padding: 12px 25px;
+    font-size: 18px;
+    border-radius: 7px;
+}
+
+.popup-action-btn:hover {
+    background-color: #218838;
+}
+
+/* Animations Keyframes */
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes fadeOut {
+    from { opacity: 1; }
+    to { opacity: 0; }
+}
+
+@keyframes slideIn {
+    from { transform: translateY(-50px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+}
+
+@keyframes slideOut {
+    from { transform: translateY(0); opacity: 1; }
+    to { transform: translateY(-50px); opacity: 0; }
+}
+
+/* Pour cacher le pop-up avec animation */
+.popup-overlay.hidden {
+    animation: fadeOut 0.3s ease-in-out forwards;
+}
+
+.popup-overlay.hidden .popup-content {
+    animation: slideOut 0.4s ease-out forwards;
+}
+.popup-content img{
+    width: 150px;
+    height: 150px;
+    border-radius: 50%;
+    margin: 0 auto 15px;
+    border: 3px solid var(--primary-color);
+    transition: border-color 0.3s ease;
 }

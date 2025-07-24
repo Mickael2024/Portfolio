@@ -14,7 +14,18 @@ document.getElementById("mode").addEventListener("click", function() {
 
 document.addEventListener('DOMContentLoaded', () => {
     // Corrected querySelectorAll syntax to select multiple, independent elements
-    document.querySelectorAll('.header, .side-left, .side-center, .side-right').forEach(element => {
+    document.querySelectorAll('.header, .side-left, .side-center, .side-right, .my-services').forEach(element => {
         element.classList.add('active');
     });
+    document.querySelectorAll('.service-case').forEach(element => {
+        element.classList.add('active');
+      
+    });
 });
+
+document.querySelectorAll('.service-case').forEach(element => {
+   
+
+   })
+  
+

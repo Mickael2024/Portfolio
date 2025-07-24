@@ -14,7 +14,9 @@
         width: 100%;
         margin: auto;
         font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        background-color: var(--background-light);
+
+        
+    background-color: var(--background-white);
         color: var(--text-dark);
         line-height: 1.6;
         overflow-x: hidden; /* Prevents horizontal scroll */
@@ -65,7 +67,6 @@
     /* Side Sections */
     .side {
         padding: 20px;
-        background-color: var(--background-white);
         box-sizing: border-box; /* Include padding in width calculation */
     }
     /* When the 'active' class is added, move them to their final visible state */
@@ -88,6 +89,9 @@
     .side-center.active {
         opacity: 1;
     }
+    .my-services.active{
+        opacity: 1;
+    }
     /* Left Sidebar */
     .side-left {
         width: 250px; /* Adjusted fixed width */
@@ -98,6 +102,7 @@
         height: 100vh;
         left: 0;
         top: 0;
+        opacity: 0; /* Start hidden */
         overflow-y: auto; /* Enable scrolling for long content */
         display: flex;
         flex-direction: column;
@@ -347,6 +352,8 @@
     /* My Services Section */
     .my-services {
         padding: 20px;
+        opacity: 0;
+        transition: transform 2s ease-in-out, opacity 2s ease-in-out;
         background: var(--background-white);
         border-radius: var(--border-radius);
         box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
@@ -372,10 +379,11 @@
 
     .service-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); /* Responsive grid */
-        gap: 25px;
-        justify-content: center;
-        padding: 0 10px;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 25px;
+            justify-content: center;
+            padding: 0 10px;
+            justify-items: center;
     }
 
     .service-case {
@@ -625,3 +633,29 @@
     .icon-nav .nav-button:hover svg circle {
     /* Change la couleur de l'icône en blanc au survol */
     }
+    /* Applique l'animation aux éléments .service-case lorsqu'ils sont 'active' */
+.service-case.active {
+    /* Nous allons utiliser l'animation 'slideInfinite' */
+    animation: slideInfinite 6s ease-in-out infinite alternate;
+    /* Ajustez la durée (6s) et le timing (ease-in-out) selon vos préférences */
+    /* 'infinite' pour qu'elle se répète sans fin */
+    /* 'alternate' pour que l'animation revienne en arrière au lieu de recommencer brusquement */
+}
+
+/* Définition des keyframes pour l'animation */
+@keyframes slideInfinite {
+    0% {
+        transform: translateX(0); /* Position de départ: pas de translation */
+    }
+    50% {
+        transform: translateX(20px); /* Déplace l'élément de 20px vers la droite */
+        /* Vous pouvez ajuster cette valeur (par exemple, -20px pour la gauche, ou plus/moins) */
+    }
+    100% {
+        transform: translateX(0); /* Retour à la position de départ */
+    }
+}
+mark{
+    background-color: orange;
+    padding: 3px;
+}

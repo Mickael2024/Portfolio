@@ -773,7 +773,8 @@ mark{
 }
 
 .popup-content {
-    background-color: #fff;
+    background: var(--background-white);
+    color: var(--text-dark);
     padding: 60px;
     border-radius: 10px;
     box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);

@@ -65,15 +65,27 @@ function closePopup() {
 }
 
 window.addEventListener('scroll', () => {
-    const topWindow = window.scrollY;
-    const bottomWindow = window.scrollY + window.innerHeight;
-    console.log(topWindow);
-    if (topWindow > 311.25 &&  topWindow < 800) {
-        document.querySelector('.my-parcours').classList.add('active');
-    }else{
-        document.querySelector('.my-parcours').classList.remove('active');
+    const myParcours = document.querySelector('.my-parcours');
+    const cv_motivation = document.querySelector('.cv-motivation-section');
+    const rect = myParcours.getBoundingClientRect();
+    const rect_cv_motivation = cv_motivation.getBoundingClientRect();
+    const top = rect.top + window.scrollY; // position absolue du haut de l'élément
+    const top_rect_cv_motivation = rect_cv_motivation.top + window.scrollY; // position absolue du haut de l'élément
+    const height = myParcours.offsetHeight;
+    const height_cv_motivation = cv_motivation.offsetHeight;
+    const scrollY = window.scrollY;
+    // Par exemple, active si le scroll est dans la zone de l'élément
+    if (scrollY + window.innerHeight > top && scrollY < top + height) {
+        myParcours.classList.add('active');
+    } else {
+        myParcours.classList.remove('active');
     }
-  });
+    if (scrollY + window.innerHeight > top_rect_cv_motivation && scrollY < top_rect_cv_motivation + height_cv_motivation) {
+        cv_motivation.classList.add('active');
+    } else {
+        cv_motivation.classList.remove('active');
+    }
+});
 
 
 

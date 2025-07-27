@@ -9,12 +9,15 @@
     --border-radius: 8px;
     --transition-speed: 0.3s ease-in-out;
 }
+html {
+    scroll-behavior: smooth;
+  }
 
     body {
         width: 100%;
         margin: auto;
         font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-
+        
         
     background-color: var(--background-white);
         color: var(--text-dark);
@@ -499,6 +502,215 @@
         color: var(--secondary-color);
     }
 
+    /* Section CV et Motivation */
+    .cv-motivation-section {
+        padding: 20px;
+        opacity: 0;
+        transition: transform 1.2s ease-in-out, opacity 1.2s ease-in-out;
+        background: var(--background-white);
+        border-radius: var(--border-radius);
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+        margin-top: 30px;
+    }
+
+    .header-cv-motivation {
+        text-align: center;
+        margin-bottom: 40px;
+        padding: 0 20px;
+    }
+
+    .header-cv-motivation h1 {
+        font-size: 2em;
+        color: var(--primary-color);
+        margin-bottom: 15px;
+    }
+
+    .header-cv-motivation p {
+        max-width: 700px;
+        margin: 0 auto;
+        color: var(--secondary-color);
+        font-size: 1.1em;
+    }
+
+    .motivation-content {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 40px;
+        align-items: start;
+    }
+
+    .motivation-text {
+        display: flex;
+        flex-direction: column;
+        gap: 25px;
+    }
+
+    .motivation-card {
+        background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+        padding: 25px;
+        border-radius: 15px;
+        border-left: 4px solid var(--primary-color);
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .motivation-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+    }
+
+    .motivation-card h3 {
+        color: var(--primary-color);
+        font-size: 1.3em;
+        margin-bottom: 12px;
+        font-weight: 600;
+    }
+
+    .motivation-card p {
+        color: var(--secondary-color);
+        line-height: 1.6;
+        margin: 0;
+        font-size: 1em;
+    }
+
+    .cv-download-section {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 30px;
+    }
+
+    .cv-preview {
+        position: relative;
+        width: 200px;
+        height: 250px;
+        border-radius: 15px;
+        overflow: hidden;
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+        transition: transform 0.3s ease;
+    }
+
+    .cv-preview:hover {
+        transform: scale(1.05);
+    }
+
+    .cv-preview img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .cv-overlay {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        background: linear-gradient(transparent, rgba(0, 0, 0, 0.8));
+        color: white;
+        padding: 20px;
+        text-align: center;
+    }
+
+    .cv-overlay h4 {
+        margin: 0 0 5px 0;
+        font-size: 1.2em;
+        font-weight: 600;
+    }
+
+    .cv-overlay p {
+        margin: 0 0 10px 0;
+        font-size: 0.9em;
+        opacity: 0.9;
+    }
+
+    .cv-badge {
+        background: var(--primary-color);
+        color: white;
+        padding: 5px 12px;
+        border-radius: 20px;
+        font-size: 0.8em;
+        font-weight: 600;
+    }
+
+    .cv-actions {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 25px;
+        width: 100%;
+    }
+
+    .cv-download-btn {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        background: linear-gradient(135deg, var(--primary-color) 0%, #ff8c00 100%);
+        color: white;
+        padding: 15px 30px;
+        border-radius: 25px;
+        font-size: 1.1em;
+        font-weight: 600;
+        box-shadow: 0 6px 20px rgba(255, 165, 0, 0.3);
+        transition: all 0.3s ease;
+        border: none;
+        cursor: pointer;
+    }
+
+    .cv-download-btn:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 8px 25px rgba(255, 165, 0, 0.4);
+        background: linear-gradient(135deg, #ff8c00 0%, var(--primary-color) 100%);
+    }
+
+    .cv-download-btn svg {
+        width: 20px;
+        height: 20px;
+    }
+
+    .cv-stats {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 20px;
+        width: 100%;
+        max-width: 300px;
+    }
+
+    .stat-item {
+        text-align: center;
+        padding: 15px 10px;
+        background: var(--background-light);
+        border-radius: 10px;
+        transition: transform 0.3s ease;
+    }
+
+    .stat-item:hover {
+        transform: translateY(-3px);
+        background: var(--primary-color);
+        color: white;
+    }
+
+    .stat-number {
+        display: block;
+        font-size: 1.5em;
+        font-weight: 700;
+        color: var(--primary-color);
+        margin-bottom: 5px;
+    }
+
+    .stat-item:hover .stat-number {
+        color: white;
+    }
+
+    .stat-label {
+        font-size: 0.8em;
+        color: var(--secondary-color);
+        font-weight: 500;
+    }
+
+    .stat-item:hover .stat-label {
+        color: white;
+    }
+
     /* Right Sidebar */
     .side-right {
         width: 60px; /* Fixed width for right sidebar */
@@ -656,6 +868,20 @@
             grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
             gap: 15px;
         }
+        
+        .cv-motivation-section {
+            margin-top: 20px;
+        }
+        
+        .motivation-content {
+            grid-template-columns: 1fr;
+            gap: 30px;
+        }
+        
+        .cv-stats {
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+        }
     }
 
     @media (max-width: 480px) {
@@ -711,6 +937,32 @@
             width: 120px;
             height: 120px;
         }
+        
+        .cv-motivation-section {
+            padding: 15px;
+        }
+        
+        .header-cv-motivation h1 {
+            font-size: 1.6em;
+        }
+        
+        .motivation-card {
+            padding: 20px;
+        }
+        
+        .cv-preview {
+            width: 150px;
+            height: 200px;
+        }
+        
+        .cv-stats {
+            grid-template-columns: 1fr;
+            gap: 10px;
+        }
+        
+        .stat-item {
+            padding: 12px 8px;
+        }
     }
     .icon-nav .nav-button svg {
         width: 24px; /* Taille fixe pour les icônes de navigation */
@@ -738,6 +990,15 @@
     /* Ajustez la durée (6s) et le timing (ease-in-out) selon vos préférences */
     /* 'infinite' pour qu'elle se répète sans fin */
     /* 'alternate' pour que l'animation revienne en arrière au lieu de recommencer brusquement */
+}
+
+.cv-motivation-section.active {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.motivation-card.active {
+    animation: slideInfinite 6s ease-in-out infinite alternate;
 }
 
 /* Définition des keyframes pour l'animation */

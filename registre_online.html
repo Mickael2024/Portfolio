@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="stylesheet" href="login.css" />
+  <link rel="stylesheet" href="./responsiveRegistreOffline.css" />
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+
+  <title>Créer un compte - Fortico Smart Home</title>
+</head>
+<body>
+  <header>
+    <div class="container">
+      <h1>
+        <span class="head1">Fortico</span>
+        <span class="head2">Smart</span>
+        <span class="head3">Home</span>
+      </h1>
+    </div>
+  </header>
+
+  <div class="corps">
+    <div class="ct_gauche">
+      <div class="gc_corp">
+        <img src="Icones/home.png" alt="" class="imge_log" />
+        <p class="tech">Bienvenue chez <span class="mais">Fortico</span></p>
+      </div>
+    </div>
+
+    <div class="toutlog">
+      <div class="p_droite1">
+        <span class="log1">Créer un compte</span><br />
+        <span class="créer1">Inscrivez-vous pour accéder à votre maison connectée</span>
+      </div>
+      <br />
+      <form autocomplete="off"> <!-- désactive l'autocomplétion -->
+        <div class="form-group">
+          <span class="log2">Email</span><br />
+          <input type="email" id="registerEmail" class="entrer" autocomplete="off" />
+        </div>
+        <br />
+        <div class="form-group password-wrapper">
+          <span class="log3">Mot de passe</span><br />
+          <div class="input-eye-container">
+            <input type="password" id="registerPassword" class="entrer" autocomplete="new-password" />
+            <img src="Icones/eye.png" alt="Afficher" class="eye-icon" onclick="toggleRegisterPassword()" />
+          </div>
+        </div>
+        <br />
+        <button class="login-btn" onclick="register()" type="button">
+          <span class="log4">S'inscrire</span>
+        </button>
+      </form>
+      <div class="links">
+        <p>Vous avez déjà un compte?<br />
+          <a href="loginOnline.html" class="creation">Connectez-vous</a></p>
+      </div>
+    </div>
+  </div>
+
+  <script>    
+    // ✅ Configuration Firebase
+    const firebaseConfig = {
+      apiKey: "AIzaSyCmj1sKqtJeWKOXSZnj3UwtNCmnc7B5gFk",
+      authDomain: "fortico-smarthome.firebaseapp.com",
+      projectId: "fortico-smarthome",
+      storageBucket: "fortico-smarthome.appspot.com",
+      messagingSenderId: "230793539627",
+      appId: "1:230793539627:web:eebadf674d6e1387abba6e"
+    };
+
+    // ✅ Initialisation Firebase
+    firebase.initializeApp(firebaseConfig);
+
+    // ✅ Fonction d'inscription avec email de vérification
+    function register() {
+      const email = document.getElementById("registerEmail").value.trim();
+      const password = document.getElementById("registerPassword").value;
+
+      firebase.auth().createUserWithEmailAndPassword(email, password)
+        .then((userCredential) => {
+          const user = userCredential.user;
+
+          user.sendEmailVerification()
+            .then(() => {
+              alert("✔ Compte créé. Un e-mail de vérification a été envoyé !");
+            })
+            .catch((error) => {
+              alert("❌ Erreur envoi e-mail : " + error.message);
+            });
+        })
+        .catch((error) => {
+          alert("❌ Erreur inscription : " + error.message);
+        });
+    }
+
+    // ✅ Fonction pour afficher/masquer le mot de passe
+    function toggleRegisterPassword() {
+      const passwordInput = document.getElementById("registerPassword");
+      const icon = document.querySelector(".eye-icon");
+
+      if (passwordInput.type === "password") {
+        passwordInput.type = "text";
+        icon.src = "Icones/eye-off.png";
+      } else {
+        passwordInput.type = "password";
+        icon.src = "Icones/eye.png";
+      }
+    }
+  </script>
+</body>
+</html>

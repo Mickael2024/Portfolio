@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<style>
+    /* From Uiverse.io by Pradeepsaranbishnoi */
+    /* From Uiverse.io by mahiatlinux */
+    /* From Uiverse.io by mahiatlinux */
+    #switch1 {
+        visibility: hidden;
+        clip: rect(0 0 0 0);
+        position: absolute;
+        left: 9999px;
+    }
+
+    .switch1 {
+        display: block;
+        width: 130px;
+        height: 60px;
+        margin: 70px auto;
+        position: relative;
+        background: #2a3235;
+        background: linear-gradient(left,
+                #2a3235 0%,
+                #3a4245 29%,
+                #2d3335 34%,
+                #3a4245 62%,
+                #4a4a4a 68%,
+                #3a4245 74%,
+                #1a1d1e 100%);
+        filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#2a3235', endColorstr='#1a1d1e', GradientType=1);
+        transition: all 0.2s ease-out;
+        cursor: pointer;
+        border-radius: 0.35em;
+        box-shadow:
+            0 0 1px 2px rgba(255, 255, 255, 0.1),
+            inset 0 2px 0 rgba(255, 255, 255, 0.1),
+            inset 0 -1px 0 1px rgba(0, 0, 0, 0.3),
+            0 8px 10px rgba(0, 0, 0, 0.3);
+    }
+
+    .switch1:before {
+        display: block;
+        position: absolute;
+        left: -35px;
+        right: -35px;
+        top: -25px;
+        bottom: -25px;
+        z-index: -2;
+        content: "";
+        border-radius: 0.4em;
+        background-color: #000000;
+       
+        pointer-events: none;
+        transition: all 0.2s ease-out;
+    }
+
+    .switch1:after {
+        content: "";
+        position: absolute;
+        right: -25px;
+        top: 50%;
+        width: 16px;
+        height: 16px;
+        border-radius: 50%;
+        background: #4a4a4a;
+        margin-top: -8px;
+        z-index: -1;
+        box-shadow:
+            inset 0 -1px 8px rgba(0, 0, 0, 0.7),
+            inset 0 -2px 2px rgba(0, 0, 0, 0.2),
+            0 1px 0 #2a3235,
+            0 -1px 0 rgba(0, 0, 0, 0.5),
+            -47px 32px 15px 13px rgba(0, 0, 0, 0.4);
+    }
+
+    #switch1:checked~.switch1 {
+        background: #1a1d1e;
+        background: linear-gradient(to right,
+                #1a1d1e 0%,
+                #3a4245 26%,
+                #4a4a4a 32%,
+                #3a4245 38%,
+                #2d3335 66%,
+                #3a4245 71%,
+                #2a3235 100%);
+        filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#1a1d1e', endColorstr='#2a3235', GradientType=1);
+    }
+
+    #switch1:checked~.switch1:after {
+        background: #00c8ff;
+        box-shadow:
+            inset 0 -1px 8px rgba(0, 0, 0, 0.7),
+            inset 0 -2px 2px rgba(0, 0, 0, 0.2),
+            0 1px 0 #2a3235,
+            0 -1px 0 rgba(0, 0, 0, 0.5),
+            -110px 32px 15px 13px rgba(0, 0, 0, 0.4);
+    }
+
+    #switch2 {
+        visibility: hidden;
+        clip: rect(0 0 0 0);
+        position: absolute;
+        left: 9999px;
+    }
+
+    .switch2 {
+        display: block;
+        width: 130px;
+        height: 60px;
+        margin: 70px auto;
+        position: relative;
+        background: #2a3235;
+        background: linear-gradient(left,
+                #2a3235 0%,
+                #3a4245 29%,
+                #2d3335 34%,
+                #3a4245 62%,
+                #4a4a4a 68%,
+                #3a4245 74%,
+                #1a1d1e 100%);
+        filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#2a3235', endColorstr='#1a1d1e', GradientType=1);
+        transition: all 0.2s ease-out;
+        cursor: pointer;
+        border-radius: 0.35em;
+        box-shadow:
+            0 0 1px 2px rgba(255, 255, 255, 0.1),
+            inset 0 2px 0 rgba(255, 255, 255, 0.1),
+            inset 0 -1px 0 1px rgba(0, 0, 0, 0.3),
+            0 8px 10px rgba(0, 0, 0, 0.3);
+    }
+
+    .switch2:before {
+        display: block;
+        position: absolute;
+        left: -35px;
+        right: -35px;
+        top: -25px;
+        bottom: -25px;
+        z-index: -2;
+        content: "";
+        border-radius: 0.4em;
+        background: #1a1d1e;
+        background: linear-gradient(#1a1d1e, #2a3235);
+        box-shadow:
+            inset 0 2px 0 rgba(255, 255, 255, 0.1),
+            inset 0 -1px 1px 1px rgba(0, 0, 0, 0.3),
+            0 0 8px 2px rgba(0, 0, 0, 0.4),
+            0 2px 4px 2px rgba(0, 0, 0, 0.3);
+        pointer-events: none;
+        transition: all 0.2s ease-out;
+    }
+
+    .switch2:after {
+        content: "";
+        position: absolute;
+        right: -25px;
+        top: 50%;
+        width: 16px;
+        height: 16px;
+        border-radius: 50%;
+        background: #4a4a4a;
+        margin-top: -8px;
+        z-index: -1;
+        box-shadow:
+            inset 0 -1px 8px rgba(0, 0, 0, 0.7),
+            inset 0 -2px 2px rgba(0, 0, 0, 0.2),
+            0 1px 0 #2a3235,
+            0 -1px 0 rgba(0, 0, 0, 0.5),
+            -47px 32px 15px 13px rgba(0, 0, 0, 0.4);
+    }
+
+    #switch2:checked~.switch2 {
+        background: #1a1d1e;
+        background: linear-gradient(to right,
+                #1a1d1e 0%,
+                #3a4245 26%,
+                #4a4a4a 32%,
+                #3a4245 38%,
+                #2d3335 66%,
+                #3a4245 71%,
+                #2a3235 100%);
+        filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#1a1d1e', endColorstr='#2a3235', GradientType=1);
+    }
+
+    #switch2:checked~.switch2:after {
+        background: #00c8ff;
+        box-shadow:
+            inset 0 -1px 8px rgba(0, 0, 0, 0.7),
+            inset 0 -2px 2px rgba(0, 0, 0, 0.2),
+            0 1px 0 #2a3235,
+            0 -1px 0 rgba(0, 0, 0, 0.5),
+            -110px 32px 15px 13px rgba(0, 0, 0, 0.4);
+    }
+
+    img {
+        width: 100px;
+        height: 100px;
+    }
+    section{
+        display: flex
+;
+    justify-content: space-between;
+    flex-direction: column;
+    align-items: center;
+    width: fit-content;
+    margin: auto;
+    padding: 20px;
+    border-radius: 74px;
+    background-color:#216d2ee3;
+    transform: rotate(90deg);
+
+    }
+    #info{
+        font-family: sans-serif;
+    font-size: large;
+   
+    color: blue;
+    }
+    .switch1,.switch2{
+        text-align: center;
+        color: white;
+        position: relative;
+    }
+    span{
+        display: flex
+        ;
+            justify-content: space-around;
+            align-items: center;
+            position: relative;
+            top: 23px;
+    }
+    .line1{
+        transform: rotate(90deg);
+        position: relative;
+        left: 46px;
+        color: #000000;
+        border: 1px solid black;
+    }
+    .line2{
+        transform: rotate(90deg);
+        position: relative;
+        left: -46px;
+        color: #000000;
+        border: 1px solid black;
+        top: -11px;
+    }.phase{
+        border: 1px solid red;
+    width: 166px;
+    transform: rotate(90deg);
+    }
+    .phase2{
+        border: 1px solid rgb(0, 0, 0);
+    width: 60px;
+    transform: rotate(90deg);
+    position: relative;
+    top: -30px;
+    }.lampe{
+        transform: rotate(271deg);
+    }.neutre{
+        border: 1px solid blue;
+        width: 173px;
+        left: 140px;
+        top: -59px;
+        position: relative;
+    }h1{
+        text-align: center;
+        font-family: sans-serif;
+    }section{
+        margin-top: -171px;
+    }
+</style>
+
+<body>
+    <h1>CIRCUIT VA ET VIENT </h1>
+    <div id="info">
+
+    </div>
+    <h3>fil rouge: <strong style="color: red;">PHASE(P)</strong></h3>
+    <h3>fil Noir: <strong style="color: ;">navette/phase</strong></h3>
+    <h3>fil bleu: <strong style="color: rgb(0, 106, 255);">Neutre(L)</strong></h3>
+    
+    <section>
+        <hr class="phase">
+    <!-- From Uiverse.io by Pradeepsaranbishnoi -->
+    <div>
+        <!-- From Uiverse.io by mahiatlinux -->
+        <input name="switch1" id="switch1" type="checkbox" />
+        <label class="switch1" for="switch1">
+            <span>SALON</span></label>
+        <hr class="line1" id="navette1">
+        <hr class="line2" id="navette2">
+        <input name="switch2" id="switch2" type="checkbox" />
+        <label class="switch2" for="switch2"><span>CUISINE</span></label>
+       
+    </div>
+    <hr class="phase2" id="navette3">
+    <div class="lampe">
+        <img id="lampe" class="icon-light" src="./ampoule.png" alt="" width="" height="">
+    </div>
+    <hr class="neutre">
+</section>
+    <script>
+        let interrupteur_A = [
+            1,
+            0
+        ];
+        let interrupteur_B = [
+            0,
+            1
+        ];
+        var switch1 = 1;
+        var switch2 = 0;
+        var lampe = document.getElementById('lampe')
+        // Mettre à jour le switch
+        const checkboxA = document.getElementById("switch1");
+        const checkboxB = document.getElementById("switch2");
+        let cont1 = 0;
+        let cont2 = 0;
+        checkboxA.addEventListener('click', () => {
+            cont1++;
+            if (cont1 === 1) {
+                switch1 = interrupteur_A[cont1];
+            } else if (cont1 > 1) {
+                cont1 = 0;
+                switch1 = interrupteur_A[cont1];
+            }
+            miseajourlampe();
+        })
+        checkboxB.addEventListener('click', () => {
+            cont2++;
+            if (cont2 === 1) {
+                switch2 = interrupteur_B[cont2];
+            } else if (cont2 > 1) {
+                cont2 = 0;
+                switch2 = interrupteur_B[cont2];
+            }
+            miseajourlampe();
+        })
+        window.addEventListener('load', () => {
+            document.getElementById('info').innerHTML = `Iswitch = ${switch1} IIswitch = ${switch2}`
+        })
+        miseajourlampe();
+        function miseajourlampe() {
+            const img = document.getElementById("lampe");
+            document.getElementById('info').innerHTML = `Iswitch = ${switch1} IIswitch = ${switch2}`
+            if (switch1 === switch2) {
+                if (img) {
+                    img.src = "./ampoule (1).png";
+                }
+            } else {
+                if (img) {
+                    img.src = "./ampoule.png";
+                }
+            }
+            if(switch1 === 1){
+                document.getElementById('navette1').style.border = "1px solid red";
+                document.getElementById('navette2').style.border = "1px solid black";
+            }else if(switch1 === 0){
+                document.getElementById('navette2').style.border = "1px solid red";
+                document.getElementById('navette1').style.border = "1px solid black";
+            }else{
+                document.getElementById('navette3').style.border = "1px solid green";
+            }
+            if(switch1 === switch2){
+                document.getElementById('navette3').style.border = "1px solid red";
+            }else{
+                document.getElementById('navette3').style.border = "1px solid black";
+            }
+        }
+
+
+    </script>
+
+</body>
+
+</html>

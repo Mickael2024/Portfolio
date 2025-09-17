@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Configuration ESP8266</title>
+  <link rel="stylesheet" href="Interface web C1 exemple.css">
+  <script>
+    let ws;
+
+
+    function connect() {
+      ws = new WebSocket("ws://192.168.4.1/ws");
+
+      ws.onopen = function () {
+        console.log("Connexion WebSocket établie");
+        document.getElementById("status").innerHTML = "Connecté au serveur WebSocket";
+      };
+
+      ws.onclose = function () {
+        console.log("Connexion WebSocket fermée");
+        document.getElementById("status").innerHTML = "Connexion fermée";
+      };
+
+      ws.onmessage = function (event) {
+        console.log("Message reçu: " + event.data);
+      };
+
+      ws.onerror = function (error) {
+        console.error("Erreur WebSocket: " + error);
+      };
+    }
+
+    function sendRole() {
+      const selectedRole = document.getElementById("role").value; // "setMaster" ou "setSlave"
+      if (ws && ws.readyState === WebSocket.OPEN) {
+        ws.send(selectedRole);
+        console.log("Rôle envoyé : " + selectedRole);
+        document.getElementById("status").innerHTML = "Rôle envoyé : " + selectedRole;
+      } else {
+        alert("La connexion WebSocket n'est pas ouverte.");
+      }
+    }
+
+    function sendMacAddress() {
+      const macAddress = document.getElementById("macAddress").value;
+      const macPattern = /^([0-9A-Fa-f]{2}:){5}[0-9A-Fa-f]{2}$/;
+
+      if (!macPattern.test(macAddress)) {
+        alert("Adresse MAC invalide. Le format doit être XX:XX:XX:XX:XX:XX.");
+        return;
+      }
+
+      if (ws && ws.readyState === WebSocket.OPEN) {
+        ws.send("setMac " + macAddress);
+        console.log("Adresse MAC envoyée : " + macAddress);
+        document.getElementById("status").innerHTML = "Adresse MAC envoyée : " + macAddress;
+      } else {
+        alert("La connexion WebSocket n'est pas ouverte.");
+      }
+    }
+
+    function sendCommand(command) {
+      if (ws && ws.readyState === WebSocket.OPEN) {
+        ws.send(command);
+        console.log("Commande envoyée : " + command);
+      } else {
+        alert("La connexion WebSocket n'est pas ouverte.");
+      }
+    }
+    function sendWifiConf() {
+      var ssid =
+        document.getElementById("ssid").value;
+      var password =
+        document.getElementById("password").value;
+        if (ssid && password){
+          var message = "setWifi" + ssid + "," + password;
+          ws.send(message);
+          alert("Configuration envoyée !");
+        }
+        else{
+          alert("veuillez remplir les champs !");
+        }
+
+    }
+
+    function sendWifiConfAp() {
+  var ssidAp = document.getElementById("ssidAp").value;
+  var passwordAp = document.getElementById("passwordAp").value;
+
+  if (ssidAp && passwordAp) {
+    var message = "confAp" + ssidAp + "," + passwordAp;
+    ws.send(message);
+
+    // Afficher le SSID et le mot de passe dans la page
+    document.getElementById("apInfo").innerHTML =
+      "<strong>SSID :</strong> " + ssidAp + "<br><strong>Mot de passe :</strong> " + passwordAp;
+  } else {
+    document.getElementById("apInfo").innerHTML =
+      "<span style='color: red;'>Veuillez remplir les champs !</span>";
+  }
+}
+
+
+
+    window.onload = connect;
+  </script>
+</head>
+
+<body>
+  <h1>Configuration ESP8266</h1>
+  <p id="status">Chargement...</p>
+
+  <label for="role">Choisir un rôle :</label>
+  <select id="role">
+    <option value="setMaster">Master</option>
+    <option value="setSlave">Slave</option>
+  </select>
+  <button onclick="sendRole()">Envoyer le rôle</button>
+  <br><br>
+
+  <label for="macAddress">Adresse MAC (si Master) :</label>
+  <input type="text" id="macAddress" placeholder="XX:XX:XX:XX:XX:XX" />
+  <button onclick="sendMacAddress()">Envoyer l'adresse MAC</button>
+  <br><br>
+  <button onclick="sendCommand('ON')">ON</button>
+  <button onclick="sendCommand('OFF')">OFF</button>
+  <button onclick="sendCommand('toggle')">Toggle LED</button>
+
+  <button onclick="sendCommand('toggleAll')">Toggle All LED</button><br><br>
+
+  <button onclick="sendCommand('toggle_slave 1')">Toggle Slave 1 LED</button>
+  <button onclick="sendCommand('toggle_slave 2')">Toggle Slave 2 LED</button><br><br>
+
+  <button onclick="sendCommand('Reset')">Reset</button>
+  <button onclick="sendCommand('ResetSlave')">Reset All Slaves </button><br><br>
+  <button onclick="sendCommand('formatage')">Formatage spiffs</button>
+  <button onclick="sendCommand('formatageSlave')">Formatage spiffs Slave</button>
+  <h2> Configuration wifi en mode Station</h2>
+
+  <label>Ssid: </label>
+  <input type="text" id="ssid" name="ssid"><br><br>
+
+  <label>Mot de passe: </label>
+  <input type="password" id="password" name="password"><br><br>
+  <button onclick="sendWifiConf()">Enregister</button><br><br>
+
+  <h2> Configuration wifi en mode Point d'accès</h2><br><br>
+  <div id="apInfo" style="margin-top: 15px; color: green;"></div>
+<br><br>
+
+  <label>Ssid: </label>
+  <input type="text" id="ssidAp" name="ssidAp"><br><br>
+
+  <label>Mot de passe: </label>
+  <input type="password" id="passwordAp" name="passwordAp"><br><br>
+  <button onclick="sendWifiConfAp()">Enregister</button>
+</body>
+
+</html>

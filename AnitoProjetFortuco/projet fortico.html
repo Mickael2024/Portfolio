@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Fortico - Services Électriques</title>
+  <link rel="stylesheet" href="style.css">
+  <!--<style>
+    @media(max-width:768px){
+      body{
+        font-size: 16px;
+      }
+      .header {
+        flex-direction: column;
+      }
+      .nav {
+        margin-top: 1rem;
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+      }
+      .nav a {
+        margin: 0.5rem;
+      }
+      .hero{
+        flex-direction: column;
+        text-align: center;
+      }
+      .hero-img{
+        margin-top: 1.5rem;
+      }
+    }
+
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background-color: #ffffff;
+      color: #1a1a1a;
+    }
+
+
+    header {
+      background-color: #0b2148;
+      color: #fff;
+      padding: 20px 50px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    header .logo {
+      font-size: 24px;
+      font-weight: bold;
+    }
+
+    nav ul {
+      list-style: none;
+      display: flex;
+      gap: 25px;
+      margin: 0;
+      padding: 0;
+    }
+
+    nav ul li a {
+      color: #fff;
+      text-decoration: none;
+    }
+
+    .btn-call {
+      background-color: #2b56f5;
+      color: #fff;
+      padding: 8px 16px;
+      border-radius: 4px;
+      text-decoration: none;
+      font-weight: bold;
+    }
+
+    .hero {
+      background-color: #0b2148;
+      color: #fff;
+      padding: 80px 50px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .hero-text {
+      max-width: 600px;
+    }
+
+    .hero button {
+      background-color: #2b56f5;
+      color: #fff;
+      border: none;
+      padding: 12px 24px;
+      margin-top: 20px;
+      cursor: pointer;
+      border-radius: 4px;
+    }
+
+    .services {
+      text-align: center;
+      padding: 60px 40px;
+    }
+
+    .services h2 {
+      margin-bottom: 40px;
+    }
+
+    .services-container {
+      display: flex;
+      justify-content: center;
+      gap: 50px;
+      flex-wrap: wrap;
+    }
+
+    .service {
+      max-width: 200px;
+    }
+
+    .service img, .service svg {
+      font-size: 40px;
+      margin-bottom: 10px;
+      color: #2b56f5;
+    }
+
+    .services button {
+      margin-top: 40px;
+      background-color: #2b56f5;
+      color: #fff;
+      border: none;
+      padding: 12px 24px;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+
+    .realisations {
+      background-color: #0b2148;
+      color: #fff;
+      padding: 60px 40px;
+    }
+
+    .realisations h2 {
+      text-align: center;
+      margin-bottom: 40px;
+    }
+
+    .realisations-container {
+      display: flex;
+      justify-content: center;
+      gap: 20px;
+      flex-wrap: wrap;
+    }
+
+    .realisations-container img {
+      width: 280px;
+      border-radius: 6px;
+    }
+  </style>-->
+</head>
+<body>
+
+  <header>
+    <div class="logo">FORTICO</div>
+    <!-- Bouton Menu Hamburger -->
+    <div class="menu-toggle" id="menu-toggle">
+      <span></span>
+      <span></span>
+      <span></span>
+    </div>
+    <nav id="nav">
+      <ul>
+        <li><a href="#">Nos services</a></li>
+        <li><a href="#">Notre histoire</a></li>
+        <li><a href="#">Nos réalisations</a></li>
+      </ul>
+      <a href="tel:+2610000000" class="btn-call">Appelez-nous</a>
+    </nav>
+    
+  </header>
+
+  <section class="hero">
+    <div class="hero-text">
+      <h1>Assurez-vous que votre installation électrique soit sûre, performante et fonctionnelle avec notre expertise en installation, réparation, entretien et mise à niveau électrique.</h1>
+      <button>Découvrir nos services</button>
+    </div>
+    <div class="hero-img">
+      <img src="ampoule.png" alt="Ampoule" >
+    </div>
+  </section>
+
+  <section class="services">
+    <h2>Nos services</h2>
+    <div class="services-container">
+      <div class="service">
+        <img src="prise.jpg" alt="Réparation">
+        <h3>Réparation électrique</h3>
+        <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit.</p>
+      </div>
+      <div class="service">
+        <img src="lampe.jpg" alt="Éclairage">
+        <h3>Éclairage</h3>
+        <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit.</p>
+      </div>
+      <div class="service">
+        <img src="domotique.jpg" alt="Domotique">
+        <h3>Installation domotique</h3>
+        <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit.</p>
+      </div>
+      <div class="service">
+        <img src="rnvbl.jpg" alt="Énergie renouvelable">
+        <h3>Énergie renouvelable</h3>
+        <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit.</p>
+      </div>
+    </div>
+    <button>Voir les avis clients</button>
+  </section>
+
+  <section class="realisations">
+    <h2>Nos dernières réalisations</h2>
+    <div class="realisations-container">
+      <img src="realisation1.jpg" alt="Travail 1">
+      <img src="realisation2.jpg" alt="Travail 2">
+      <img src="realisation3.jpg" alt="Travail 3">
+    </div>
+  </section>
+  <script>
+    const menuToggle = document.getElementById("menu-toggle");
+    const nav = document.getElementById("nav");
+    menuToggle.addEventListener("click", ()=>{
+      nav.classList.toggle("active");
+    });
+  </script>
+
+</body>
+</html>

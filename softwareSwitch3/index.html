@@ -1,0 +1,637 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Contrôle ESP8266 - Complet</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #1a1a2d;
+            --card-color: #2c2c3f;
+            --primary-color: #00ffff;
+            /* Aqua */
+            --text-color: #f0f0f0;
+            --text-muted-color: #a0a0b0;
+            --shadow-color: rgba(0, 255, 255, 0.4);
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 2rem 1rem;
+            min-height: 100vh;
+        }
+
+        .card {
+            background-color: var(--card-color);
+            border-radius: 16px;
+            padding: 1.5rem 2rem;
+            margin-bottom: 1.5rem;
+            width: 100%;
+            max-width: 500px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            text-align: center;
+        }
+
+        h1 {
+            color: var(--primary-color);
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+        }
+
+        h2 {
+            margin-bottom: 1.5rem;
+            font-weight: 400;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            padding-bottom: 0.75rem;
+        }
+
+        p {
+            color: var(--text-muted-color);
+            line-height: 1.6;
+        }
+
+        /* --- Contrôle LED --- */
+        .led-control-area {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            background-color: var(--bg-color);
+            padding: 1.5rem;
+            border-radius: 12px;
+            margin-top: 1rem;
+        }
+
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 60px;
+            height: 34px;
+        }
+
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #444;
+            transition: .4s;
+            border-radius: 34px;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 26px;
+            width: 26px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+
+        input:checked+.slider {
+            background-color: var(--primary-color);
+        }
+
+        input:checked+.slider:before {
+            transform: translateX(26px);
+        }
+
+        #bulb-visual {
+            width: 80px;
+            height: 80px;
+        }
+
+        .bulb-path {
+            transition: fill 0.4s ease, stroke 0.4s ease, filter 0.4s ease;
+        }
+
+        .bulb-off .bulb-path {
+            fill: transparent;
+            stroke: var(--text-muted-color);
+            stroke-width: 1.5;
+        }
+
+        .bulb-on .bulb-path {
+            fill: var(--primary-color);
+            stroke: var(--primary-color);
+            stroke-width: 1.5;
+        }
+
+        /* --- Formulaire WiFi Moderne --- */
+        #wifi-form div {
+            margin-bottom: 1rem;
+            text-align: left;
+        }
+
+        #wifi-form label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 300;
+            color: var(--text-muted-color);
+        }
+
+        #wifi-form input {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            font-size: 1rem;
+            transition: box-shadow 0.3s ease, border-color 0.3s ease;
+        }
+
+        #wifi-form input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px var(--shadow-color);
+        }
+
+        #wifi-form button {
+            width: 100%;
+            padding: 0.85rem 1rem;
+            border: none;
+            border-radius: 8px;
+            background-color: var(--primary-color);
+            color: var(--bg-color);
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 1rem;
+            transition: transform 0.2s ease, background-color 0.2s ease;
+        }
+
+        #wifi-form button:hover {
+            transform: scale(1.03);
+            background-color: #00e6e6;
+        }
+
+        /* --- Statut du Système --- */
+        .status {
+            text-align: left;
+            display: grid;
+            gap: 0.75rem;
+        }
+
+        .status p {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .status strong {
+            color: var(--text-color);
+            font-weight: 600;
+        }
+
+        .status span {
+            font-family: 'Courier New', Courier, monospace;
+            background-color: var(--bg-color);
+            padding: 3px 8px;
+            border-radius: 4px;
+            color: var(--primary-color);
+        }
+
+        /* --- Responsive Design --- */
+        @media (max-width: 600px) {
+            body {
+                padding: 1rem 0.5rem;
+            }
+
+            .card {
+                padding: 1.5rem;
+            }
+
+            h1 {
+                font-size: 1.8rem;
+            }
+
+            h2 {
+                font-size: 1.3rem;
+            }
+        }
+
+        button:disabled {
+            opacity: 0.2;
+        }
+
+        input[type="range"] {
+            -webkit-appearance: none;
+            width: 100%;
+            height: 8px;
+            background: white;
+            border-radius: 5px;
+            outline: none;
+            transition: background 0.3s;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            background: #1a1a2d;
+            border-radius: 50%;
+            cursor: pointer;
+            box-shadow: 0 0 10px var(--shadow-color);
+            transition: background 0.3s;
+        }
+
+        input[type="range"]::-webkit-slider-thumb:hover {
+            background: #00e6e6;
+        }
+
+        .popup-overlay {
+            display: none;
+            /* caché par défaut */
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+        }
+
+        /* Boîte du popup */
+        .popup-box {
+            background: #2e3c54;
+            padding: 20px 30px;
+            border-radius: 8px;
+            text-align: center;
+            max-width: 300px;
+            width: 90%;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        }
+
+        /* Boutons */
+        .popup-buttons {
+            margin-top: 15px;
+            display: flex;
+            justify-content: space-around;
+            flex-direction: column;
+        }
+
+        .popup-buttons button {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        /* Styles spécifiques */
+        .yes-btn {
+            background-color: #12a6ad;
+            color: white;
+        }
+
+        .yes-btn:hover {
+            background-color: #e63939;
+        }
+        .no-btn {
+            background-color: #ccc;
+        }
+
+        .no-btn:hover {
+            background-color: #aaa;
+        }
+
+        .led_lampe {
+            padding: 7px;
+            width: 180px;
+            margin-bottom: 18px;
+            border: none;
+            border-radius: 6px;
+            background-color: #f5eaea;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="card">
+        <h1>Contrôle ESP8266</h1>
+        <p>Connecté à: <strong id="ap-ssid" style="color: var(--primary-color);">Chargement...</strong></p>
+    </div>
+    <div>
+        <span id="connection-status"></span>
+    </div>
+
+    <div id="popup" class="popup-overlay">
+        <div class="popup-box">
+            <h3 style="color: red;">Voulez-vous vraiment vous déconnecter ?</h3>
+            <div class="popup-buttons">
+                <div>
+                    <select name="OutputLampe" id="OutputLampe" class="led_lampe">
+                        <option value="LAMPE_LED_D6">Output_D6</option>
+                        <option value="LAMPE_LED_D7">Output_D7</option>
+                        <option value="LAMPE_LED_D8">Output_D8</option>
+                    </select>
+                </div>
+                <div>
+                    <button class="yes-btn" id="newlampe">Ajoute</button>
+                    <button class="no-btn" id="cancel">Ferme</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="card" id="card">
+        <h2>Contrôle LED</h2>
+        <button id="addLampe">Ajoute une lampe</button>
+        <!-- <div class="led-control-area">
+            <label class="switch">
+                <input type="checkbox" id="led-toggle">
+                <span class="slider"></span>
+            </label>
+            <div id="bulb-visual" class="bulb-off">
+                <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path class="bulb-path"
+                        d="M12,2A7,7,0,0,0,5,9c0,2.38,1.19,4.47,3,5.74V17a1,1,0,0,0,1,1h6a1,1,0,0,0,1-1V14.74c1.81-1.27,3-3.36,3-5.74A7,7,0,0,0,12,2ZM9,21a1,1,0,0,0,1,1h4a1,1,0,0,0,1-1V20H9Z" />
+                </svg>
+            </div>
+        </div>
+     
+        <div style="margin-top: 1rem; text-align:center;">
+            <label for="brightness" style="color: var(--text-muted-color); display:block; margin-bottom:0.5rem;">
+                Luminosité: <span id="brightness-value">100</span>%
+            </label>
+            <input type="range" id="brightness" min="0" max="100" value="100" style="width:80%;">
+        </div>
+        -->
+    </div> 
+
+    <div class="card">
+        <h2>Configuration WiFi</h2>
+        <form id="wifi-form">
+            <div>
+                <label for="ssid">SSID du réseau:</label>
+                <input type="text" id="ssid" required placeholder="Ex: MonWiFi" disabled>
+            </div>
+            <div>
+                <label for="password">Mot de passe:</label>
+                <input type="password" id="password" disabled required placeholder="********">
+            </div>
+            <button type="submit" disabled>Enregistrer & Redémarrer</button>
+        </form>
+    </div>
+
+    <div class="card">
+        <h2>Statut du système</h2>
+        <div class="status">
+            <p><strong>Adresse IP:</strong> <span id="ip">...</span></p>
+            <p><strong>Adresse MAC:</strong> <span id="mac">...</span></p>
+            <p><strong>Uptime:</strong> <span id="uptime">...</span></p>
+        </div>
+    </div>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const ESP_IP = '192.168.4.1';
+            const wifiForm = document.getElementById('wifi-form');
+            const ipElement = document.getElementById('ip');
+            const macElement = document.getElementById('mac');
+            const uptimeElement = document.getElementById('uptime');
+            const apSsidElement = document.getElementById('ap-ssid');
+            const connectionStatus = document.getElementById('connection-status');
+            const addlampe = document.getElementById('addLampe')
+            const popup = document.getElementById('popup')
+            const newlampe = document.getElementById('newlampe')
+            
+            
+
+            let uptimeInterval;
+            let isConnected = false;
+
+            const updateBulbAppearance = (isOn) => {
+                bulbVisual.className = isOn ? 'bulb-on' : 'bulb-off';
+            };
+            addlampe.addEventListener('click', () => {
+                popup.style.display = 'flex';
+                document.getElementById('cancel').addEventListener('click', () => {
+                    popup.style.display = 'none';
+                })
+                newlampe.addEventListener('click', ()=>{
+                 createModule()
+                })
+            })
+            function createModule () {
+                const card = document.getElementById('card')
+                let output =  document.getElementById('OutputLampe');
+                let sortieLampe = output.options[output.selectedIndex].text;
+                const moduleCard = document.createElement('div');
+                moduleCard.className = 'Block'
+                  
+                  moduleCard.innerHTML = 
+                  `<div class="led-control-area">
+                   <h1>sortieLampe</h1>
+           <label class="switch">
+               <input type="checkbox" id="led-toggle">
+               <span class="slider"></span>
+           </label>
+           <div id="bulb-visual" class="bulb-off">
+               <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                   <path class="bulb-path"
+                       d="M12,2A7,7,0,0,0,5,9c0,2.38,1.19,4.47,3,5.74V17a1,1,0,0,0,1,1h6a1,1,0,0,0,1-1V14.74c1.81-1.27,3-3.36,3-5.74A7,7,0,0,0,12,2ZM9,21a1,1,0,0,0,1,1h4a1,1,0,0,0,1-1V20H9Z" />
+               </svg>
+           </div>
+       </div>
+    
+       <div style="margin-top: 1rem; text-align:center;">
+           <label for="brightness" style="color: var(--text-muted-color); display:block; margin-bottom:0.5rem;">
+               Luminosité: <span id="brightness-value">100</span>%
+           </label>
+           <input type="range" id="brightness" min="0" max="100" value="100" style="width:80%;">
+       </div>` 
+       
+       card.appendChild(moduleCard)
+       const ESP_IP = '192.168.4.1';
+       const ledToggle = document.getElementById('led-toggle');
+       const bulbVisual = document.getElementById('bulb-visual');
+       const brightnessSlider = document.getElementById('brightness');
+       const brightnessValue = document.getElementById('brightness-value');
+       popup.style.display = 'none';
+       const sendLedState = async (state) => {
+        try {
+            await fetch(`http://${ESP_IP}/control`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: `state=${state}`
+            });
+        } catch (err) { console.error(err); }
+    };
+
+    ledToggle.addEventListener('change', function () {
+        if (!isConnected) {
+            this.checked = !this.checked;
+            return;
+        }
+        const state = this.checked ? 'on' : 'off';
+        updateBulbAppearance(this.checked);
+        if (this.checked && brightnessSlider.value == 0) {
+            brightnessSlider.value = 100;
+            brightnessValue.textContent = 100;
+            sendBrightness(100);
+        }
+        if (!this.checked) {
+            brightnessSlider.value = 0;
+            brightnessValue.textContent = 0;
+            sendBrightness(0);
+        }
+        sendLedState(state);
+    });
+
+    // --- Brightness ---
+    const sendBrightness = async (value) => {
+        try {
+            await fetch(`http://${ESP_IP}/brightness`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: `value=${value}`
+            });
+        } catch (err) { console.error(err); }
+    };
+
+    brightnessSlider.addEventListener('input', function () {
+        brightnessValue.textContent = this.value;
+
+        if (this.value > 0 && !ledToggle.checked) {
+            ledToggle.checked = true;
+            updateBulbAppearance(true);
+            sendLedState('on');
+        }
+        if (this.value == 0 && ledToggle.checked) {
+            ledToggle.checked = false;
+            updateBulbAppearance(false);
+            sendLedState('off');
+        }
+        
+    });
+    const updateConnectionStatus = (connected) => {
+        isConnected = connected;
+        //ledToggle.disabled = !connected;
+        //brightnessSlider.disabled = !connected;
+        connectionStatus.innerHTML = connected ? 'Connecté' : 'Déconnecté - Connectez-vous au point d\'accès';
+        connectionStatus.style.color = connected ? 'green' : 'red';
+    };
+
+    const checkConnection = async () => {
+        try {
+            const response = await fetch(`http://${ESP_IP}/ping`);
+            if (response.ok) {
+                updateConnectionStatus(true);
+                return true;
+            }
+        } catch (error) {
+            console.error('Erreur connexion:', error);
+        }
+        updateConnectionStatus(false);
+        return false;
+    };
+
+    const fetchSystemInfo = async () => {
+        if (!await checkConnection()) return;
+
+        try {
+            const response = await fetch(`http://${ESP_IP}/api/info`);
+            if (!response.ok) throw new Error('Erreur réseau');
+            const data = await response.json();
+
+            ipElement.textContent = data.ip || 'N/A';
+            macElement.textContent = data.mac || 'N/A';
+            apSsidElement.textContent = data.ssid || 'Mode AP';
+            brightnessSlider.value = data.brightness || 0;
+            brightnessValue.textContent = brightnessSlider.value;
+
+            const isLedOn = data.led_state === 'on' || brightnessSlider.value > 0;
+            ledToggle.checked = isLedOn;
+            updateBulbAppearance(isLedOn);
+
+            updateUptime(data.uptime || 0);
+        } catch (error) {
+            console.error('Erreur:', error);
+            updateConnectionStatus(false);
+        }
+    };
+
+    brightnessSlider.addEventListener('change', function () {
+        if (!isConnected) { alert("Pas connecté au module !"); return; }
+        sendBrightness(this.value);
+    });
+    
+    const init = async () => {
+        await checkConnection();
+        await fetchSystemInfo();
+        setInterval(checkConnection, 5000);
+        setInterval(fetchSystemInfo, 30000);
+    };
+    init();
+}
+            const updateUptime = (initialSeconds) => {
+                clearInterval(uptimeInterval);
+                let uptimeSeconds = initialSeconds || 0;
+                uptimeInterval = setInterval(() => {
+                    uptimeSeconds++;
+                    const h = String(Math.floor(uptimeSeconds / 3600)).padStart(2, '0');
+                    const m = String(Math.floor((uptimeSeconds % 3600) / 60)).padStart(2, '0');
+                    const s = String(uptimeSeconds % 60).padStart(2, '0');
+                    uptimeElement.textContent = `${h}:${m}:${s}`;
+                }, 1000);
+            };
+
+          
+
+            // --- LED Toggle ---
+            
+
+            // --- WiFi Form ---
+            wifiForm.addEventListener('submit', function (e) {
+                e.preventDefault();
+                const ssid = document.getElementById('ssid').value.trim();
+                const password = document.getElementById('password').value.trim();
+
+                connectionStatus.textContent = "Module redémarre, reconnectez-vous au nouveau WiFi...";
+                connectionStatus.style.color = "orange";
+
+                wifiForm.querySelector('button').disabled = true;
+                ledToggle.disabled = true;
+                brightnessSlider.disabled = true;
+
+                fetch(`http://${ESP_IP}/save`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ ssid, password })
+                }).catch(err => console.log("Redémarrage en cours", err));
+            });
+
+           
+
+            
+        });
+      
+    </script>
+
+</body>
+
+</html>

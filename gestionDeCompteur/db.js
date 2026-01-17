@@ -66,29 +66,174 @@ async function saveClient(client) {
             createdAt: client.createdAt || new Date().toISOString(),
             updatedAt: new Date().toISOString(),
             dernierRecharge: client.dernierRecharge || null,
-            statut: client.statut || 'actif'
+            statut: client.statut || 'actif',
+            // Champs pour la synchronisation
+            companyId: window.firebaseService?.currentCompanyId ? window.firebaseService.currentCompanyId() : 'local',
+            isSynced: false,
+            syncedAt: null,
+            firebaseId: client.firebaseId || null // Conserver l'ID Firebase si existe
         };
         
         // Vérifier si le client existe déjà
         const existingIndex = clients.findIndex(c => c.id === clientId);
         
         if (existingIndex >= 0) {
-            clients[existingIndex] = clientData;
+            // Mettre à jour le client existant
+            const existingClient = clients[existingIndex];
+            
+            // Vérifier si le numéro de compteur change
+            if (existingClient.numeroCompteur !== clientData.numeroCompteur) {
+                const existingMeter = clients.find(c => 
+                    c.id !== clientId && 
+                    c.numeroCompteur === clientData.numeroCompteur
+                );
+                if (existingMeter) {
+                    throw new Error('Numéro de compteur déjà utilisé par un autre client');
+                }
+            }
+            
+            // Conserver les champs de synchronisation existants
+            clients[existingIndex] = {
+                ...existingClient,
+                ...clientData,
+                firebaseId: existingClient.firebaseId || clientData.firebaseId, // Garder l'ID Firebase
+                isSynced: existingClient.isSynced && clientData.numeroCompteur === existingClient.numeroCompteur, // Reste synced si pas de changement de compteur
+                syncedAt: existingClient.syncedAt,
+                updatedAt: new Date().toISOString()
+            };
+            
+            console.log('Client mis à jour:', clientData);
+            
         } else {
-            // Vérifier si le numéro de compteur existe déjà
+            // Nouveau client - vérifier si le numéro de compteur existe déjà
             const existingMeter = clients.find(c => c.numeroCompteur === clientData.numeroCompteur);
             if (existingMeter) {
                 throw new Error('Numéro de compteur déjà utilisé');
             }
+            
             clients.push(clientData);
+            console.log('Nouveau client ajouté:', clientData);
         }
         
+        // Sauvegarder en LocalStorage
         localStorage.setItem(LS_KEYS.CLIENTS, JSON.stringify(clients));
-        console.log('Client sauvegardé:', clientData);
         
-        return clientData;
+        // === SYNCHRONISATION AVEC FIREBASE ===
+        let firebaseResult = null;
+        const currentClient = clients.find(c => c.id === clientId);
+        
+        if (window.firebaseService && navigator.onLine) {
+            try {
+                console.log('Tentative de sauvegarde sur Firebase...');
+                
+                // Préparer les données pour Firebase (sans les champs spéciaux)
+                const firebaseData = {
+                    nom: currentClient.nom,
+                    prenom: currentClient.prenom,
+                    adresse: currentClient.adresse,
+                    numeroCompteur: currentClient.numeroCompteur,
+                    typeContrat: currentClient.typeContrat,
+                    email: currentClient.email,
+                    telephone: currentClient.telephone,
+                    solde: currentClient.solde,
+                    consommationTotale: currentClient.consommationTotale,
+                    createdAt: currentClient.createdAt,
+                    updatedAt: currentClient.updatedAt,
+                    dernierRecharge: currentClient.dernierRecharge,
+                    statut: currentClient.statut,
+                    localId: currentClient.id, // Stocker l'ID local pour référence
+                    companyId: currentClient.companyId
+                };
+                
+                // Si le client a déjà un firebaseId, l'utiliser pour la mise à jour
+                if (currentClient.firebaseId) {
+                    firebaseResult = await window.firebaseService.saveClientToFirebase({
+                        ...firebaseData,
+                        id: currentClient.firebaseId // Inclure l'ID Firebase pour mise à jour
+                    });
+                } else {
+                    // Sinon, vérifier si un client avec ce numéro de compteur existe déjà dans Firebase
+                    const existingFirebaseClient = await window.firebaseService.getClientByMeter(currentClient.numeroCompteur);
+                    if (existingFirebaseClient) {
+                        // Mettre à jour le client existant dans Firebase
+                        firebaseResult = await window.firebaseService.saveClientToFirebase({
+                            ...firebaseData,
+                            id: existingFirebaseClient.id
+                        });
+                    } else {
+                        // Créer un nouveau client dans Firebase
+                        firebaseResult = await window.firebaseService.saveClientToFirebase(firebaseData);
+                    }
+                }
+                
+                if (firebaseResult && firebaseResult.success) {
+                    console.log('Client synchronisé avec Firebase:', firebaseResult.clientId);
+                    
+                    // Mettre à jour le client local avec l'ID Firebase
+                    const updatedClients = getClientsFromLS();
+                    const clientIndex = updatedClients.findIndex(c => c.id === clientId);
+                    
+                    if (clientIndex >= 0) {
+                        updatedClients[clientIndex] = {
+                            ...updatedClients[clientIndex],
+                            firebaseId: firebaseResult.clientId,
+                            isSynced: true,
+                            syncedAt: new Date().toISOString()
+                        };
+                        
+                        localStorage.setItem(LS_KEYS.CLIENTS, JSON.stringify(updatedClients));
+                    }
+                    
+                    // Mettre à jour clientData pour le retour
+                    clientData.firebaseId = firebaseResult.clientId;
+                    clientData.isSynced = true;
+                    clientData.syncedAt = new Date().toISOString();
+                    
+                } else if (firebaseResult) {
+                    console.warn('Échec synchronisation Firebase:', firebaseResult.error);
+                }
+                
+            } catch (firebaseError) {
+                console.error('Erreur Firebase:', firebaseError);
+                // Continuer même en cas d'erreur Firebase
+            }
+        }
+        
+        // Si pas en ligne ou erreur Firebase, mettre en file d'attente
+        if (!clientData.isSynced) {
+            console.log('Client mis en file d\'attente pour synchronisation');
+            
+            const operationType = existingIndex >= 0 ? 'update' : 'create';
+            const clientForQueue = {
+                ...currentClient,
+                operation: operationType
+            };
+            
+            // Si c'est une mise à jour et qu'on a un firebaseId, l'inclure
+            if (operationType === 'update' && currentClient.firebaseId) {
+                clientForQueue.firebaseId = currentClient.firebaseId;
+            }
+            
+            await saveToSyncQueue('client', clientForQueue);
+        }
+        
+        // Mettre à jour la liste des compteurs pour l'autocomplétion
+        await loadAllMeters();
+        
+        return {
+            ...clientData,
+            firebaseId: firebaseResult?.clientId || currentClient?.firebaseId,
+            firebaseSuccess: firebaseResult?.success || false
+        };
+        
     } catch (error) {
         console.error('Erreur sauvegarde client:', error);
+        
+        // Journaliser l'erreur
+        if (window.firebaseService) {
+            await window.firebaseService.logAction('erreur_sauvegarde_client', error.message);
+        }
+        
         throw error;
     }
 }
@@ -105,9 +250,11 @@ function getClientsFromLS() {
 
 async function getClientsFromDB() {
     try {
-        const clients = getClientsFromLS();
+        let clients = getClientsFromLS();
         
-        // Assurer que tous les clients ont les champs nécessaires
+        console.log(`${clients.length} clients trouvés en local`);
+        
+        // Normaliser les données locales
         const normalizedClients = clients.map(client => ({
             id: client.id || Date.now().toString(),
             nom: client.nom || '',
@@ -122,22 +269,424 @@ async function getClientsFromDB() {
             createdAt: client.createdAt || new Date().toISOString(),
             updatedAt: client.updatedAt || new Date().toISOString(),
             dernierRecharge: client.dernierRecharge || null,
-            statut: client.statut || 'actif'
+            statut: client.statut || 'actif',
+            // Champs pour la synchronisation
+            firebaseId: client.firebaseId || null,
+            isSynced: client.isSynced !== undefined ? client.isSynced : true,
+            companyId: client.companyId || 'local',
+            syncedAt: client.syncedAt || null
         }));
         
-        console.log(`${normalizedClients.length} clients normalisés`);
+        // === INTÉGRATION FIREBASE ===
+        // Vérifier si nous sommes en ligne et authentifiés
+        const shouldSyncWithFirebase = 
+            navigator.onLine && 
+            window.firebaseService && 
+            window.firebaseService.currentUserId && 
+            window.firebaseService.currentUserId();
+        
+        if (shouldSyncWithFirebase) {
+            try {
+                console.log('Tentative de récupération des clients depuis Firebase...');
+                
+                // 1. D'abord synchroniser les données locales vers Firebase
+                await syncLocalClientsToFirebase(normalizedClients);
+                
+                // 2. Récupérer les clients depuis Firebase
+                const firebaseResult = await window.firebaseService.getClientsFromFirebase();
+                
+                if (firebaseResult.success && firebaseResult.clients && firebaseResult.clients.length > 0) {
+                    console.log(`${firebaseResult.clients.length} clients récupérés depuis Firebase`);
+                    
+                    // 3. Fusionner les données locales et Firebase
+                    const mergedClients = mergeClientsWithFirebase(normalizedClients, firebaseResult.clients);
+                    
+                    // 4. Sauvegarder la fusion en LocalStorage
+                    localStorage.setItem(LS_KEYS.CLIENTS, JSON.stringify(mergedClients));
+                    
+                    // 5. Mettre à jour le timestamp de dernière synchronisation
+                    localStorage.setItem('lastFirebaseSync_Clients', new Date().toISOString());
+                    
+                    console.log(`${mergedClients.length} clients après fusion`);
+                    
+                    // Trier par nom pour un affichage cohérent
+                    mergedClients.sort((a, b) => {
+                        const nomA = (a.nom || '').toLowerCase();
+                        const nomB = (b.nom || '').toLowerCase();
+                        const prenomA = (a.prenom || '').toLowerCase();
+                        const prenomB = (b.prenom || '').toLowerCase();
+                        
+                        if (nomA === nomB) {
+                            return prenomA.localeCompare(prenomB);
+                        }
+                        return nomA.localeCompare(nomB);
+                    });
+                    
+                    return mergedClients;
+                } else {
+                    console.warn('Aucun client récupéré depuis Firebase:', firebaseResult.error);
+                }
+                
+            } catch (firebaseError) {
+                console.error('Erreur lors de la synchronisation Firebase:', firebaseError);
+                
+                // Journaliser l'erreur
+                if (window.firebaseService.logAction) {
+                    await window.firebaseService.logAction(
+                        'erreur_sync_clients', 
+                        `Erreur Firebase: ${firebaseError.message}`
+                    );
+                }
+            }
+        } else {
+            console.log('Mode hors ligne - utilisation des données locales uniquement');
+            
+            // Marquer les clients non synchronisés
+            const unsyncedClients = normalizedClients.filter(client => !client.isSynced);
+            if (unsyncedClients.length > 0) {
+                console.log(`${unsyncedClients.length} clients en attente de synchronisation`);
+            }
+        }
+        
+        // Trier les clients normalisés
+        normalizedClients.sort((a, b) => {
+            const nomA = (a.nom || '').toLowerCase();
+            const nomB = (b.nom || '').toLowerCase();
+            const prenomA = (a.prenom || '').toLowerCase();
+            const prenomB = (b.prenom || '').toLowerCase();
+            
+            if (nomA === nomB) {
+                return prenomA.localeCompare(prenomB);
+            }
+            return nomA.localeCompare(nomB);
+        });
+        
+        console.log(`${normalizedClients.length} clients retournés`);
         return normalizedClients;
+        
     } catch (error) {
         console.error('Erreur récupération clients DB:', error);
+        
+        // En cas d'erreur, retourner les données locales de secours
+        try {
+            const fallbackClients = getClientsFromLS().map(client => ({
+                id: client.id || Date.now().toString(),
+                nom: client.nom || '',
+                prenom: client.prenom || '',
+                adresse: client.adresse || '',
+                numeroCompteur: client.numeroCompteur || '',
+                typeContrat: client.typeContrat || 'standard',
+                email: client.email || '',
+                telephone: client.telephone || '',
+                solde: parseFloat(client.solde) || 0,
+                consommationTotale: parseFloat(client.consommationTotale) || 0,
+                statut: client.statut || 'actif'
+            }));
+            
+            console.warn(`Utilisation des données de secours: ${fallbackClients.length} clients`);
+            return fallbackClients;
+            
+        } catch (fallbackError) {
+            console.error('Erreur même avec le fallback:', fallbackError);
+            throw new Error(`Impossible de récupérer les clients: ${error.message}`);
+        }
+    }
+}
+
+// Fonction pour synchroniser les clients locaux vers Firebase
+async function syncLocalClientsToFirebase(localClients) {
+    try {
+        // Filtrer les clients qui ne sont pas synchronisés
+        const clientsToSync = localClients.filter(client => !client.isSynced);
+        
+        if (clientsToSync.length === 0) {
+            console.log('Aucun client à synchroniser vers Firebase');
+            return;
+        }
+        
+        console.log(`${clientsToSync.length} clients à synchroniser vers Firebase`);
+        
+        let syncedCount = 0;
+        let errorCount = 0;
+        
+        // Synchroniser chaque client
+        for (const client of clientsToSync) {
+            try {
+                // Préparer les données pour Firebase
+                const firebaseData = {
+                    nom: client.nom,
+                    prenom: client.prenom,
+                    adresse: client.adresse,
+                    numeroCompteur: client.numeroCompteur,
+                    typeContrat: client.typeContrat,
+                    email: client.email,
+                    telephone: client.telephone,
+                    solde: client.solde,
+                    consommationTotale: client.consommationTotale,
+                    statut: client.statut,
+                    createdAt: client.createdAt,
+                    updatedAt: client.updatedAt,
+                    dernierRecharge: client.dernierRecharge
+                };
+                
+                // Si le client a déjà un firebaseId, c'est une mise à jour
+                let result;
+                if (client.firebaseId) {
+                    firebaseData.id = client.firebaseId;
+                    result = await window.firebaseService.saveClientToFirebase(firebaseData);
+                } else {
+                    // Sinon c'est une création
+                    result = await window.firebaseService.saveClientToFirebase(firebaseData);
+                }
+                
+                if (result.success) {
+                    // Mettre à jour le client local
+                    const updatedClients = getClientsFromLS();
+                    const clientIndex = updatedClients.findIndex(c => c.id === client.id);
+                    
+                    if (clientIndex >= 0) {
+                        updatedClients[clientIndex] = {
+                            ...updatedClients[clientIndex],
+                            firebaseId: result.clientId || client.firebaseId,
+                            isSynced: true,
+                            syncedAt: new Date().toISOString(),
+                            companyId: result.data?.companyId || client.companyId
+                        };
+                        
+                        localStorage.setItem(LS_KEYS.CLIENTS, JSON.stringify(updatedClients));
+                    }
+                    
+                    syncedCount++;
+                    console.log(`Client synchronisé: ${client.prenom} ${client.nom}`);
+                    
+                } else {
+                    errorCount++;
+                    console.warn(`Échec synchronisation client ${client.id}:`, result.error);
+                }
+                
+                // Petite pause pour éviter de surcharger Firebase
+                await new Promise(resolve => setTimeout(resolve, 100));
+                
+            } catch (clientError) {
+                errorCount++;
+                console.error(`Erreur synchronisation client ${client.id}:`, clientError);
+            }
+        }
+        
+        console.log(`Synchronisation terminée: ${syncedCount} réussis, ${errorCount} échecs`);
+        
+        if (syncedCount > 0 && window.firebaseService.logAction) {
+            await window.firebaseService.logAction(
+                'sync_clients_firebase',
+                `${syncedCount} clients synchronisés vers Firebase`
+            );
+        }
+        
+    } catch (error) {
+        console.error('Erreur générale synchronisation clients:', error);
         throw error;
     }
 }
 
-async function findClientByMeter(meterNumber) {
+// Fonction pour fusionner les clients locaux et Firebase
+function mergeClientsWithFirebase(localClients, firebaseClients) {
+    const mergedMap = new Map();
+    
+    // 1. Ajouter tous les clients Firebase
+    firebaseClients.forEach(fbClient => {
+        const firebaseId = fbClient.id;
+        const clientKey = firebaseId || fbClient.numeroCompteur;
+        
+        if (clientKey) {
+            const convertedClient = convertFirebaseClientToLocal(fbClient);
+            mergedMap.set(clientKey, convertedClient);
+        }
+    });
+    
+    // 2. Ajouter ou fusionner les clients locaux
+    localClients.forEach(localClient => {
+        const clientKey = localClient.firebaseId || localClient.numeroCompteur;
+        
+        if (clientKey && mergedMap.has(clientKey)) {
+            // Fusionner: garder les données les plus récentes
+            const existingClient = mergedMap.get(clientKey);
+            const localDate = new Date(localClient.updatedAt || localClient.createdAt);
+            const firebaseDate = new Date(existingClient.updatedAt || existingClient.createdAt);
+            
+            if (localDate > firebaseDate && !localClient.isSynced) {
+                // Les données locales sont plus récentes et non synchronisées
+                mergedMap.set(clientKey, {
+                    ...existingClient,
+                    ...localClient,
+                    // Indiquer que ces données doivent être resynchronisées
+                    isSynced: false,
+                    firebaseId: existingClient.firebaseId || localClient.firebaseId
+                });
+            } else if (localDate <= firebaseDate) {
+                // Les données Firebase sont plus récentes ou égales
+                mergedMap.set(clientKey, {
+                    ...localClient,
+                    ...existingClient,
+                    isSynced: true
+                });
+            }
+        } else if (clientKey) {
+            // Client local avec clé mais pas dans Firebase
+            mergedMap.set(clientKey, localClient);
+        } else {
+            // Client local sans clé identifiable (nouveau)
+            const newKey = `local_${localClient.id}`;
+            mergedMap.set(newKey, localClient);
+        }
+    });
+    
+    // Convertir la Map en array
+    const mergedArray = Array.from(mergedMap.values());
+    
+    // Nettoyer les doublons par numeroCompteur
+    const uniqueClients = [];
+    const seenMeters = new Set();
+    
+    mergedArray.forEach(client => {
+        if (client.numeroCompteur && !seenMeters.has(client.numeroCompteur)) {
+            seenMeters.add(client.numeroCompteur);
+            uniqueClients.push(client);
+        } else if (!client.numeroCompteur) {
+            uniqueClients.push(client);
+        }
+    });
+    
+    return uniqueClients;
+}
+
+// Fonction pour convertir un client Firebase au format local
+function convertFirebaseClientToLocal(firebaseClient) {
+    return {
+        id: firebaseClient.id || Date.now().toString(),
+        firebaseId: firebaseClient.id,
+        nom: firebaseClient.nom || '',
+        prenom: firebaseClient.prenom || '',
+        adresse: firebaseClient.adresse || '',
+        numeroCompteur: firebaseClient.numeroCompteur || '',
+        typeContrat: firebaseClient.typeContrat || 'standard',
+        email: firebaseClient.email || '',
+        telephone: firebaseClient.telephone || '',
+        solde: parseFloat(firebaseClient.solde) || 0,
+        consommationTotale: parseFloat(firebaseClient.consommationTotale) || 0,
+        statut: firebaseClient.statut || 'actif',
+        companyId: firebaseClient.companyId || 'local',
+        isSynced: true,
+        syncedAt: new Date().toISOString(),
+        // Gestion des dates Firebase
+        createdAt: firebaseClient.createdAt instanceof Date ? 
+            firebaseClient.createdAt.toISOString() : 
+            (typeof firebaseClient.createdAt === 'string' ? 
+                firebaseClient.createdAt : 
+                new Date().toISOString()),
+        updatedAt: firebaseClient.updatedAt instanceof Date ? 
+            firebaseClient.updatedAt.toISOString() : 
+            (typeof firebaseClient.updatedAt === 'string' ? 
+                firebaseClient.updatedAt : 
+                new Date().toISOString()),
+        dernierRecharge: firebaseClient.dernierRecharge instanceof Date ? 
+            firebaseClient.dernierRecharge.toISOString() : 
+            (typeof firebaseClient.dernierRecharge === 'string' ? 
+                firebaseClient.dernierRecharge : 
+                null)
+    };
+}
+
+// Fonction utilitaire pour vérifier l'état de la synchronisation
+function getSyncStatus() {
     const clients = getClientsFromLS();
-    return clients.find(client => 
-        client.numeroCompteur && client.numeroCompteur.trim() === meterNumber.trim()
-    );
+    const totalClients = clients.length;
+    const syncedClients = clients.filter(c => c.isSynced).length;
+    const unsyncedClients = totalClients - syncedClients;
+    
+    return {
+        total: totalClients,
+        synced: syncedClients,
+        unsynced: unsyncedClients,
+        percentage: totalClients > 0 ? Math.round((syncedClients / totalClients) * 100) : 100,
+        lastSync: localStorage.getItem('lastFirebaseSync_Clients') || 'Jamais'
+    };
+}
+async function findClientByMeter(meterNumber) {
+    try {
+        // Chercher d'abord en local
+        let clients = getClientsFromLS();
+        let client = clients.find(c => 
+            c.numeroCompteur && c.numeroCompteur.trim() === meterNumber.trim()
+        );
+        
+        // Si pas trouvé et en ligne, chercher dans Firebase
+        if (!client && window.firebaseService && navigator.onLine && window.firebaseService.currentUserId()) {
+            console.log('Recherche du client dans Firebase...');
+            
+            try {
+                const clientsResult = await window.firebaseService.getClientsFromFirebase();
+                
+                if (clientsResult.success) {
+                    const firebaseClient = clientsResult.clients.find(c => 
+                        c.numeroCompteur && c.numeroCompteur.trim() === meterNumber.trim()
+                    );
+                    
+                    if (firebaseClient) {
+                        console.log('Client trouvé dans Firebase:', firebaseClient);
+                        
+                        // Convertir pour LocalStorage
+                        client = {
+                            id: firebaseClient.id || Date.now().toString(),
+                            nom: firebaseClient.nom,
+                            prenom: firebaseClient.prenom,
+                            adresse: firebaseClient.adresse,
+                            numeroCompteur: firebaseClient.numeroCompteur,
+                            typeContrat: firebaseClient.typeContrat,
+                            email: firebaseClient.email,
+                            telephone: firebaseClient.telephone,
+                            solde: parseFloat(firebaseClient.solde) || 0,
+                            consommationTotale: parseFloat(firebaseClient.consommationTotale) || 0,
+                            statut: firebaseClient.statut,
+                            createdAt: firebaseClient.createdAt instanceof Date ? 
+                                firebaseClient.createdAt.toISOString() : 
+                                (firebaseClient.createdAt || new Date().toISOString()),
+                            updatedAt: firebaseClient.updatedAt instanceof Date ? 
+                                firebaseClient.updatedAt.toISOString() : 
+                                (firebaseClient.updatedAt || new Date().toISOString()),
+                            dernierRecharge: firebaseClient.dernierRecharge instanceof Date ? 
+                                firebaseClient.dernierRecharge.toISOString() : 
+                                firebaseClient.dernierRecharge,
+                            firebaseId: firebaseClient.id,
+                            isSynced: true,
+                            companyId: firebaseClient.companyId
+                        };
+                        
+                        // Sauvegarder localement pour usage futur
+                        const existingIndex = clients.findIndex(c => 
+                            c.firebaseId === client.firebaseId || 
+                            c.numeroCompteur === client.numeroCompteur
+                        );
+                        
+                        if (existingIndex >= 0) {
+                            clients[existingIndex] = client;
+                        } else {
+                            clients.push(client);
+                        }
+                        
+                        localStorage.setItem(LS_KEYS.CLIENTS, JSON.stringify(clients));
+                    }
+                }
+            } catch (firebaseError) {
+                console.warn('Erreur recherche Firebase:', firebaseError);
+            }
+        }
+        
+        return client || null;
+        
+    } catch (error) {
+        console.error('Erreur recherche client par compteur:', error);
+        return null;
+    }
 }
 
 async function findClientById(clientId) {
@@ -146,21 +695,89 @@ async function findClientById(clientId) {
 }
 
 
+// db.js - Modifiez la fonction deleteClientFromDB
+
 async function deleteClientFromDB(clientId) {
     try {
         const clients = getClientsFromLS();
         const clientIndex = clients.findIndex(c => c.id === clientId);
         
         if (clientIndex === -1) {
-            return false;
+            throw new Error('Client non trouvé');
         }
         
+        const clientToDelete = clients[clients.findIndex(c => c.id === clientId)];
+        
+        // Vérifier s'il y a des tokens non utilisés
+        const tokens = getTokensFromLS();
+        const activeTokens = tokens.filter(t => 
+            t.clientId === clientId && t.status === 'unused'
+        );
+        
+        if (activeTokens.length > 0) {
+            throw new Error(`Impossible de supprimer. ${activeTokens.length} token(s) non utilisé(s).`);
+        }
+        
+        // Supprimer localement
         clients.splice(clientIndex, 1);
         localStorage.setItem(LS_KEYS.CLIENTS, JSON.stringify(clients));
         
-        return true;
+        // Supprimer aussi les tokens associés
+        const filteredTokens = tokens.filter(token => token.clientId !== clientId);
+        localStorage.setItem(LS_KEYS.TOKENS, JSON.stringify(filteredTokens));
+        
+        // === SYNCHRONISER AVEC FIREBASE ===
+        if (window.firebaseService && navigator.onLine) {
+            try {
+                // Si le client a un firebaseId, le supprimer de Firebase
+                if (clientToDelete.firebaseId) {
+                    await window.firebaseService.deleteClientFromFirebase(clientToDelete.firebaseId);
+                    console.log('Client supprimé de Firebase:', clientToDelete.firebaseId);
+                } else {
+                    // Sinon, chercher par numéro de compteur
+                    const firebaseClient = await window.firebaseService.getClientByMeter(clientToDelete.numeroCompteur);
+                    if (firebaseClient && firebaseClient.id) {
+                        await window.firebaseService.deleteClientFromFirebase(firebaseClient.id);
+                        console.log('Client supprimé de Firebase (par compteur):', firebaseClient.id);
+                    }
+                }
+            } catch (firebaseError) {
+                console.warn('Erreur suppression Firebase:', firebaseError);
+                // Mettre en file d'attente pour suppression
+                await saveToSyncQueue('client', {
+                    ...clientToDelete,
+                    operation: 'delete'
+                });
+            }
+        } else {
+            // Mettre en file d'attente pour synchronisation
+            await saveToSyncQueue('client', {
+                ...clientToDelete,
+                operation: 'delete'
+            });
+        }
+        
+        // Mettre à jour la liste des compteurs
+        await loadAllMeters();
+        
+        // Journaliser
+        if (window.firebaseService) {
+            await window.firebaseService.logAction(
+                'suppression_client', 
+                `Client supprimé: ${clientToDelete.prenom} ${clientToDelete.nom} (${clientToDelete.numeroCompteur})`
+            );
+        }
+        
+        return { success: true, client: clientToDelete };
+        
     } catch (error) {
         console.error('Erreur suppression client:', error);
+        
+        // Journaliser l'erreur
+        if (window.firebaseService) {
+            await window.firebaseService.logAction('erreur_suppression_client', error.message);
+        }
+        
         throw error;
     }
 }
@@ -168,38 +785,52 @@ async function deleteClientFromDB(clientId) {
 // Fonctions Tokens
 async function saveTokenToLocal(tokenData) {
     try {
-        const tokens = getTokensFromLS();
-        
-        const token = {
-            id: tokenData.id || Date.now().toString(),
-            token: tokenData.token || '',
-            meter: tokenData.meter || '',
-            amount: tokenData.amount || 0,
-            kwh: tokenData.kwh || calculateKwhFromAmount(tokenData.amount || 0),
-            date: tokenData.date || new Date().toISOString(),
-            status: tokenData.status || 'unused',
-            clientId: tokenData.clientId || null,
-            generatedBy: tokenData.generatedBy || (currentUser ? currentUser.name : 'system'),
-            usedDate: tokenData.usedDate || null,
-            sentVia: tokenData.sentVia || null,
-            sentDate: tokenData.sentDate || null,
-            tarifKwh: TARIF_KWH, // Sauvegarder le tarif utilisé
-            devise: DEVISE // Sauvegarder la devise
-        };
-        
-        tokens.push(token);
-        localStorage.setItem(LS_KEYS.TOKENS, JSON.stringify(tokens));
-        
-        // Mettre à jour la dernière recharge du client
-        updateClientLastRecharge(token.meter, token.amount, token.date);
-        
-        console.log('Token sauvegardé localement:', token);
-        return token;
+      const tokens = getTokensFromLS();
+      
+      const token = {
+        id: tokenData.id || Date.now().toString(),
+        token: tokenData.token || '',
+        meter: tokenData.meter || '',
+        amount: tokenData.amount || 0,
+        kwh: tokenData.kwh || calculateKwhFromAmount(tokenData.amount || 0),
+        date: tokenData.date || new Date().toISOString(),
+        status: tokenData.status || 'unused',
+        clientId: tokenData.clientId || null,
+        generatedBy: tokenData.generatedBy || (currentUser ? currentUser.name : 'system'),
+        usedDate: tokenData.usedDate || null,
+        sentVia: tokenData.sentVia || null,
+        sentDate: tokenData.sentDate || null,
+        tarifKwh: TARIF_KWH,
+        devise: DEVISE,
+        isSynced: false // Marquer pour synchronisation
+      };
+      
+      tokens.push(token);
+      localStorage.setItem(LS_KEYS.TOKENS, JSON.stringify(tokens));
+      
+      // Mettre à jour la dernière recharge du client
+      updateClientLastRecharge(token.meter, token.amount, token.date);
+      
+      // Sauvegarder en Firebase si en ligne
+      if (window.firebaseService && navigator.onLine) {
+        const firebaseResult = await window.firebaseService.saveTokenToFirebase(token);
+        if (firebaseResult.success) {
+          token.isSynced = true;
+          token.firebaseId = firebaseResult.tokenId;
+          localStorage.setItem(LS_KEYS.TOKENS, JSON.stringify(tokens));
+        }
+      } else {
+        // Mettre en file d'attente
+        await saveToSyncQueue('token', token);
+      }
+      
+      console.log('Token sauvegardé localement:', token);
+      return token;
     } catch (error) {
-        console.error('Erreur sauvegarde token:', error);
-        throw error;
+      console.error('Erreur sauvegarde token:', error);
+      throw error;
     }
-}
+  }
 
 function getTokensFromLS() {
     try {
@@ -312,53 +943,59 @@ function getLogsFromLS() {
 }
 
 // Gestion file d'attente synchronisation
+// db.js - Ajouter ces fonctions
+
+// File d'attente de synchronisation
 function getSyncQueueFromLS() {
     try {
-        const queue = localStorage.getItem(LS_KEYS.SYNC_QUEUE);
-        return queue ? JSON.parse(queue) : [];
+      const queue = localStorage.getItem(LS_KEYS.SYNC_QUEUE);
+      return queue ? JSON.parse(queue) : [];
     } catch (error) {
-        console.error('Erreur lecture sync queue:', error);
-        return [];
+      console.error('Erreur lecture sync queue:', error);
+      return [];
     }
-}
-
-async function saveToSyncQueue(type, data) {
+  }
+  
+  async function saveToSyncQueue(type, data) {
     try {
-        const queue = getSyncQueueFromLS();
-        
-        queue.push({
-            id: Date.now().toString(),
-            type: type,
-            data: data,
-            timestamp: new Date().toISOString(),
-            synced: false,
-            attempts: 0
-        });
-        
+      const queue = getSyncQueueFromLS();
+      
+      queue.push({
+        id: Date.now().toString(),
+        type: type,
+        data: data,
+        operation: 'create',
+        localId: data.id || Date.now().toString(),
+        synced: false,
+        attempts: 0,
+        companyId: window.firebaseService.currentCompanyId ? window.firebaseService.currentCompanyId() : 'local',
+        createdAt: new Date().toISOString()
+      });
+      
+      localStorage.setItem(LS_KEYS.SYNC_QUEUE, JSON.stringify(queue));
+      return { success: true, id: queue[queue.length - 1].id };
+    } catch (error) {
+      console.error('Erreur sauvegarde sync queue:', error);
+      return { success: false, error: error.message };
+    }
+  }
+  
+  async function markAsSyncedInLS(syncId) {
+    try {
+      const queue = getSyncQueueFromLS();
+      const itemIndex = queue.findIndex(item => item.id === syncId);
+      
+      if (itemIndex >= 0) {
+        queue[itemIndex].synced = true;
+        queue[itemIndex].syncedAt = new Date().toISOString();
         localStorage.setItem(LS_KEYS.SYNC_QUEUE, JSON.stringify(queue));
-        return true;
+      }
+      return { success: true };
     } catch (error) {
-        console.error('Erreur sauvegarde sync queue:', error);
-        throw error;
+      console.error('Erreur mise à jour sync:', error);
+      return { success: false, error: error.message };
     }
-}
-
-async function markAsSynced(syncId) {
-    try {
-        const queue = getSyncQueueFromLS();
-        const itemIndex = queue.findIndex(item => item.id === syncId);
-        
-        if (itemIndex >= 0) {
-            queue[itemIndex].synced = true;
-            queue[itemIndex].syncedAt = new Date().toISOString();
-            localStorage.setItem(LS_KEYS.SYNC_QUEUE, JSON.stringify(queue));
-        }
-        return true;
-    } catch (error) {
-        console.error('Erreur mise à jour sync:', error);
-        throw error;
-    }
-}
+  }
 
 // Statistiques Dashboard
 async function getDashboardStats() {
@@ -589,28 +1226,86 @@ function searchClients(searchTerm) {
 // }
 
 // Export des fonctions
-window.dbFunctions = {
-    initDatabase,
-    saveClient,
-    getClientsFromDB,
-    findClientByMeter,
-    findClientById,
-    deleteClientFromDB,
-    saveTokenToLocal,
-    getTokensFromDB,
-    updateTokenStatus,
-    saveTransaction,
-    getClientTransactions,
-    saveLogToLocal,
-    saveToSyncQueue,
-    markAsSynced,
-    getDashboardStats,
-    searchClients,
-    TARIF_KWH,
-    DEVISE,
-    calculateKwhFromAmount,
-    calculateAmountFromKwh
-};
+
+function mergeFirebaseData(localData, firebaseData, key = 'id') {
+    const merged = [...localData];
+    const localMap = new Map(localData.map(item => [item[key], item]));
+    
+    firebaseData.forEach(fbItem => {
+        const existing = localMap.get(fbItem[key]);
+        if (existing) {
+            // Fusionner: garder la version la plus récente
+            const localDate = new Date(existing.updatedAt || existing.createdAt || 0);
+            const firebaseDate = new Date(fbItem.updatedAt || fbItem.createdAt || 0);
+            
+            if (firebaseDate > localDate) {
+                // Mettre à jour avec les données Firebase
+                Object.assign(existing, fbItem);
+                existing.isSynced = true;
+            }
+        } else {
+            // Ajouter les données Firebase
+            fbItem.isSynced = true;
+            merged.push(fbItem);
+        }
+    });
+    
+    return merged;
+}
+
+// Synchroniser les données manuellement
+async function manualSync() {
+    try {
+        if (!navigator.onLine) {
+            showNotification('Pas de connexion Internet', 'error');
+            return { success: false, error: 'Offline' };
+        }
+        
+        if (!window.firebaseService || !window.firebaseService.currentUserId()) {
+            showNotification('Veuillez vous connecter', 'warning');
+            return { success: false, error: 'Not authenticated' };
+        }
+        
+        showNotification('Synchronisation en cours...', 'info');
+        
+        // 1. Récupérer les données Firebase
+        const [clientsResult, tokensResult] = await Promise.all([
+            window.firebaseService.getClientsFromFirebase(),
+            window.firebaseService.getTokensFromFirebase()
+        ]);
+        
+        // 2. Fusionner avec les données locales
+        if (clientsResult.success) {
+            const localClients = getClientsFromLS();
+            const mergedClients = mergeFirebaseData(localClients, clientsResult.clients, 'numeroCompteur');
+            localStorage.setItem(LS_KEYS.CLIENTS, JSON.stringify(mergedClients));
+        }
+        
+        if (tokensResult.success) {
+            const localTokens = getTokensFromLS();
+            const mergedTokens = mergeFirebaseData(localTokens, tokensResult.tokens, 'token');
+            localStorage.setItem(LS_KEYS.TOKENS, JSON.stringify(mergedTokens));
+        }
+        
+        // 3. Synchroniser les données locales vers Firebase
+        await window.firebaseService.syncLocalData();
+        
+        showNotification('Synchronisation terminée', 'success');
+        
+        // Recharger l'affichage
+        await loadDashboardData();
+        await loadClients();
+        await loadAllMeters();
+        
+        return { success: true };
+        
+    } catch (error) {
+        console.error('Erreur synchronisation manuelle:', error);
+        showNotification('Erreur synchronisation: ' + error.message, 'error');
+        return { success: false, error: error.message };
+    }
+}
+
 function checkStorageSpace() {
     try {
         const totalSpace = 5 * 1024 * 1024; // 5MB (limite commune)
@@ -639,3 +1334,25 @@ function checkStorageSpace() {
         return null;
     }
 }
+window.dbFunctions = {
+    initDatabase,
+    saveClient,
+    getClientsFromDB,
+    findClientByMeter,
+    findClientById,
+    deleteClientFromDB,
+    saveTokenToLocal,
+    getTokensFromDB,
+    updateTokenStatus,
+    saveTransaction,
+    getClientTransactions,
+    saveLogToLocal,
+    saveToSyncQueue,
+    markAsSyncedInLS,
+    getDashboardStats,
+    searchClients,
+    TARIF_KWH,
+    DEVISE,
+    calculateKwhFromAmount,
+    calculateAmountFromKwh
+};

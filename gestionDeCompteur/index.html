@@ -6,6 +6,8 @@
     <title>Gestion Compteurs Prépayés - Admin</title>
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
     <!-- <link rel="manifest" href="manifest.json"> -->
 </head>
 <body>
@@ -302,10 +304,12 @@
     </div>
 
     <!-- Scripts -->
-    <script src="./db.js"></script>
-    <script src="./auth.js"></script>
-    <script src="./sync.js"></script>
-    <script src="./offline.js"></script>
-    <script src="./app.js"></script>
+<!-- Scripts standards (sans modules) -->
+<script src="./firebaseAdmin.js"></script>
+<script src="./db.js"></script>
+<script src="./auth.js"></script>
+<script src="./sync.js"></script>
+<script src="./offline.js"></script>
+<script src="./app.js"></script>
 </body>
 </html>

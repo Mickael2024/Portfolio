@@ -171,7 +171,164 @@
     const FirebaseAdminService = {
         
         // ==================== GESTION CLIENTS ====================
+        async loginUser(username, password) {
+            try {
+                console.log('🔐 Tentative de connexion:', username);
+                
+                // Rechercher dans la collection CompteAdmin
+                const snapshot = await db.collection('CompteAdmin')
+                    .where('user', '==', username)
+                    .limit(1)
+                    .get();
+                
+                if (!snapshot.empty) {
+                    const adminDoc = snapshot.docs[0];
+                    const adminData = adminDoc.data();
+                    
+                    // Comparer les mots de passe (directement sans hash pour l'instant)
+                    if (adminData.motdepass === password) {
+                        console.log('✅ Admin connecté:', username);
+                        
+                        // Si vous avez d'autres infos dans le document
+                        const userInfo = {
+                            uid: adminDoc.id,
+                            username: adminData.user,
+                            displayName: adminData.nom || username,
+                            role: adminData.role || 'admin',
+                            companyId: adminData.companyId || 'default',
+                            email: adminData.email || `${username}@compteur-nlf.com`,
+                            // Ajoutez d'autres champs si présents dans votre document
+                            ...adminData
+                        };
+                        
+                        return {
+                            success: true,
+                            user: userInfo
+                        };
+                    } else {
+                        return {
+                            success: false,
+                            error: 'Mot de passe incorrect'
+                        };
+                    }
+                }
+                
+                return {
+                    success: false,
+                    error: 'Utilisateur non trouvé'
+                };
+                
+            } catch (error) {
+                console.error('❌ Erreur connexion Firebase:', error.code, error.message);
+                
+                // Messages d'erreur conviviaux
+                let errorMessage = 'Erreur de connexion';
+                switch (error.code) {
+                    case 'permission-denied':
+                        errorMessage = 'Accès refusé à la base de données';
+                        break;
+                    case 'unavailable':
+                        errorMessage = 'Service indisponible - Vérifiez votre connexion';
+                        break;
+                    default:
+                        errorMessage = 'Erreur serveur: ' + error.message;
+                }
+                
+                return {
+                    success: false,
+                    error: errorMessage
+                };
+            }
+        },
         
+        async checkAdminExists() {
+            try {
+                // Vérifier si la collection CompteAdmin existe et contient des documents
+                const snapshot = await db.collection('CompteAdmin').limit(1).get();
+                return {
+                    exists: !snapshot.empty,
+                    count: snapshot.size
+                };
+            } catch (error) {
+                console.error('Erreur vérification admin:', error);
+                return {
+                    exists: false,
+                    error: error.message
+                };
+            }
+        },
+        
+        async createAdminAccount(username, password, additionalData = {}) {
+            try {
+                // Vérifier si l'utilisateur existe déjà
+                const existingSnapshot = await db.collection('CompteAdmin')
+                    .where('user', '==', username)
+                    .limit(1)
+                    .get();
+                
+                if (!existingSnapshot.empty) {
+                    return {
+                        success: false,
+                        error: 'Cet utilisateur existe déjà'
+                    };
+                }
+                
+                // Créer le document admin
+                const adminData = {
+                    user: username,
+                    motdepass: password, // ⚠️ À hasher en production!
+                    createdAt: new Date().toISOString(),
+                    updatedAt: new Date().toISOString(),
+                    ...additionalData
+                };
+                
+                // Ajouter un ID personnalisé ou laisser Firebase générer
+                const adminRef = await db.collection('CompteAdmin').add(adminData);
+                
+                console.log('✅ Compte admin créé:', adminRef.id);
+                
+                return {
+                    success: true,
+                    adminId: adminRef.id
+                };
+                
+            } catch (error) {
+                console.error('Erreur création admin:', error);
+                return {
+                    success: false,
+                    error: error.message
+                };
+            }
+        },
+        
+        async logoutUser() {
+            // Simple déconnexion - juste nettoyer localement
+            console.log('👋 Utilisateur déconnecté');
+            return { success: true };
+        },
+        
+        async getCurrentUser() {
+            try {
+                // Récupérer depuis localStorage d'abord
+                const userStr = localStorage.getItem('currentUser');
+                if (userStr) {
+                    const user = JSON.parse(userStr);
+                    
+                    // Optionnel: vérifier si toujours valide dans Firebase
+                    if (user.firebaseId) {
+                        const adminDoc = await db.collection('CompteAdmin').doc(user.firebaseId).get();
+                        if (adminDoc.exists) {
+                            return user;
+                        }
+                    }
+                }
+                return null;
+            } catch (error) {
+                console.error('Erreur récupération utilisateur:', error);
+                return null;
+            }
+        },
+
         async saveClientToFirebase(clientData) {
             try {
                 console.log('💾 Sauvegarde client vers Firebase:', clientData.numeroCompteur);
@@ -455,7 +612,12 @@
         
         // Getters simples
         currentUserId() {
-            return 'admin';
+            const userStr = localStorage.getItem('currentUser');
+            if (userStr) {
+                const user = JSON.parse(userStr);
+                return user.firebaseId || user.uid;
+            }
+            return null;
         },
         
         currentCompanyId() {

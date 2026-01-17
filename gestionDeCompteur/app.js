@@ -833,7 +833,6 @@ async function handleLogin(e) {
     
     const username = document.getElementById('username').value.trim();
     const password = document.getElementById('password').value;
-    const role = document.getElementById('userRole').value;
     
     if (!username || !password) {
         showNotification('Veuillez remplir tous les champs', 'error');
@@ -841,71 +840,114 @@ async function handleLogin(e) {
     }
     
     try {
-        // Essayer d'abord l'authentification Firebase
-        if (window.firebaseService) {
-            // Pour Firebase, on utilise l'email comme username
-            const email = username.includes('@') ? username : `${username}@compteur-nlf.com`;
-            
-            const result = await window.firebaseService.loginUser(email, password);
+        // Afficher un indicateur de chargement
+        const loginBtn = document.querySelector('#loginForm button[type="submit"]');
+        const originalText = loginBtn.innerHTML;
+        loginBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Connexion...';
+        loginBtn.disabled = true;
+        
+        // Essayer l'authentification Firebase personnalisée
+        if (window.firebaseService && window.firebaseService.loginUser) {
+            const result = await window.firebaseService.loginUser(username, password);
             
             if (result.success) {
+                // Mettre à jour l'utilisateur courant
                 currentUser = {
-                    name: result.user.displayName || username,
-                    role: result.user.role || role,
-                    email: email,
-                    firebaseUid: result.user.uid
+                    name: result.user.displayName || result.user.username || username,
+                    role: result.user.role || 'admin',
+                    username: result.user.username || username,
+                    firebaseId: result.user.uid,
+                    ...result.user // Inclure toutes les infos supplémentaires
                 };
                 
+                // Sauvegarder en localStorage
                 localStorage.setItem('currentUser', JSON.stringify(currentUser));
+                
+                // Mettre à jour l'UI
                 document.getElementById('userName').textContent = currentUser.name;
                 document.getElementById('loginModal').style.display = 'none';
                 
-                // Journaliser avec Firebase
-                await window.firebaseService.logAction('connexion', `Utilisateur ${username} connecté via Firebase`);
+                // Afficher l'interface principale
+                document.querySelectorAll('.container, .main-content').forEach(element => {
+                    element.style.opacity = '1';
+                    element.style.visibility = 'visible';
+                });
                 
-                showNotification('Connexion réussie!', 'success');
+                // Masquer le message de bienvenue si présent
+                const welcomeMessage = document.getElementById('welcomeMessage');
+                if (welcomeMessage) {
+                    welcomeMessage.style.display = 'none';
+                }
                 
-                // Recharger les données avec synchronisation
+                // Journaliser la connexion
+                await window.firebaseService.logAction('connexion', `Administrateur ${username} connecté`);
+                
+                showNotification(`Bienvenue ${currentUser.name} !`, 'success');
+                
+                // Recharger les données
                 setTimeout(async () => {
                     await loadDashboardData();
                     await loadClients();
                     await loadAllMeters();
                 }, 500);
                 
+            } else {
+                // Échec de l'authentification Firebase
+                showNotification(result.error || 'Identifiants incorrects', 'error');
+                
+                // Réactiver le bouton
+                loginBtn.innerHTML = originalText;
+                loginBtn.disabled = false;
                 return;
             }
+            
+        } else {
+            // Firebase Service non disponible
+            showNotification('Service d\'authentification indisponible', 'error');
+            
+            // Réactiver le bouton
+            loginBtn.innerHTML = originalText;
+            loginBtn.disabled = false;
+            return;
         }
         
-        // Fallback: authentification locale (pour développement/hors ligne)
-        currentUser = {
-            name: username,
-            role: role
-        };
-        
-        localStorage.setItem('currentUser', JSON.stringify(currentUser));
-        document.getElementById('userName').textContent = currentUser.name;
-        document.getElementById('loginModal').style.display = 'none';
-        
-        // Journaliser localement
-        await logAction('connexion', `Utilisateur ${username} connecté (mode local)`);
-        
-        showNotification('Mode local activé', 'info');
+        // Réactiver le bouton
+        loginBtn.innerHTML = originalText;
+        loginBtn.disabled = false;
         
     } catch (error) {
         console.error('Erreur connexion:', error);
-        showNotification('Échec de la connexion: ' + error.message, 'error');
+        showNotification('Erreur de connexion: ' + error.message, 'error');
+        
+        // Réactiver le bouton en cas d'erreur
+        const loginBtn = document.querySelector('#loginForm button[type="submit"]');
+        if (loginBtn) {
+            loginBtn.innerHTML = '<i class="fas fa-sign-in-alt"></i> Se connecter';
+            loginBtn.disabled = false;
+        }
     }
 }
-
 async function handleLogout() {
     try {
         // Déconnexion Firebase si disponible
-        if (window.firebaseService && currentUser?.firebaseUid) {
+        if (window.firebaseService && currentUser?.firebaseId) {
             await window.firebaseService.logoutUser();
         }
         
         // Journaliser la déconnexion
-        await logAction('deconnexion', `Utilisateur ${currentUser?.name || 'inconnu'} déconnecté`);
+        await logAction('deconnexion', `Administrateur ${currentUser?.name || 'inconnu'} déconnecté`);
+        
+        // Cacher l'interface principale
+        document.querySelectorAll('.container, .main-content').forEach(element => {
+            element.style.opacity = '0';
+            element.style.visibility = 'hidden';
+        });
+        
+        // Afficher le message de bienvenue
+        const welcomeMessage = document.getElementById('welcomeMessage');
+        if (welcomeMessage) {
+            welcomeMessage.style.display = 'block';
+        }
         
     } catch (error) {
         console.error('Erreur déconnexion Firebase:', error);
@@ -913,8 +955,16 @@ async function handleLogout() {
         // Nettoyer localement
         localStorage.removeItem('currentUser');
         currentUser = null;
+        
+        // Afficher la modal de connexion
         document.getElementById('loginModal').style.display = 'flex';
         document.getElementById('userName').textContent = 'Non connecté';
+        
+        // Réinitialiser le formulaire
+        const loginForm = document.getElementById('loginForm');
+        if (loginForm) {
+            loginForm.reset();
+        }
         
         showNotification('Déconnecté avec succès', 'success');
     }

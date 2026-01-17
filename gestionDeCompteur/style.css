@@ -85,6 +85,7 @@ body {
 .container {
     display: flex;
     height: calc(100vh - 70px);
+    
 }
 
 /* Sidebar */
@@ -462,6 +463,25 @@ tbody tr:hover {
     margin-top: 20px;
 }
 
+
+/* Quand l'utilisateur est connecté */
+body.logged-in .container,
+body.logged-in .main-content {
+    opacity: 1;
+    visibility: visible;
+}
+
+/* Message de bienvenue */
+#welcomeMessage {
+    display: block;
+    text-align: center;
+    padding: 40px;
+    max-width: 600px;
+    margin: 50px auto;
+    background: white;
+    border-radius: 10px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
 /* Modals */
 .modal {
     display: none;
@@ -1028,4 +1048,7 @@ mark {
     background: white;
     border-radius: 3px;
     border: 1px solid #dee2e6;
+}
+.fa-spinner {
+    animation: spin 1s linear infinite;
 }

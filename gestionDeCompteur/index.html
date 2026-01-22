@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="fr">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,12 +8,16 @@
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
     <!-- <link rel="manifest" href="manifest.json"> -->
 </head>
+
 <body>
     <!-- Navigation -->
     <nav class="navbar">
+        <button class="menu-toggle" id="menuToggle">
+            <i class="fas fa-bars"></i>
+        </button>
         <div class="nav-brand">
             <i class="fas fa-bolt"></i>
             <span>Gestion Compteurs</span>
@@ -25,7 +30,8 @@
             </button>
         </div>
     </nav>
-
+    <div class="menu-overlay" id="menuOverlay"></div>
+    <div class="table-container mobile-cards">
     <!-- Conteneur Principal -->
     <div class="container">
         <!-- Sidebar -->
@@ -51,12 +57,17 @@
                     <i class="fas fa-chart-bar"></i>
                     <span>Reporting</span>
                 </li>
+                <li class="menu-item" data-page="maintenance">
+                    <i class="fas fa-wrench"></i>
+                    <span>Maintenance à distance</span>
+                    <span class="badge badge-new">Nouveau</span>
+                </li>
                 <li class="menu-item" data-page="parametres">
                     <i class="fas fa-cog"></i>
                     <span>Paramètres</span>
                 </li>
             </ul>
-            
+
             <div class="sync-info">
                 <p>Dernière synchro: <span id="lastSync">Jamais</span></p>
                 <button id="syncBtn" class="btn-sync">
@@ -70,7 +81,7 @@
             <!-- Page Dashboard -->
             <div id="dashboardPage" class="page active">
                 <h1><i class="fas fa-tachometer-alt"></i> Tableau de Bord</h1>
-                
+
                 <div class="stats-grid">
                     <div class="stat-card">
                         <h3>Ventes Aujourd'hui</h3>
@@ -116,7 +127,7 @@
             <!-- Page Gestion Clients -->
             <div id="clientsPage" class="page">
                 <h1><i class="fas fa-users"></i> Gestion des Clients</h1>
-                
+
                 <div class="page-header">
                     <div class="search-bar">
                         <input type="text" id="clientSearch" placeholder="Rechercher client ou compteur...">
@@ -148,185 +159,464 @@
 
             <!-- Page Génération Tokens -->
             <!-- Dans la page génération de tokens -->
-<div id="tokensPage" class="page">
-    <h1><i class="fas fa-key"></i> Génération de Tokens</h1>
+            <div id="tokensPage" class="page">
+                <h1><i class="fas fa-key"></i> Génération de Tokens</h1>
+
+                <div class="tarif-banner">
+                    <i class="fas fa-bolt"></i>
+                    <strong>Tarif en vigueur : 500 Ariary par kWh</strong>
+                    <small id="tarifInfo"></small>
+                </div>
+
+                <div class="token-form-container">
+                    <div class="form-section">
+                        <h3>Informations de Recharge</h3>
+
+                        <div class="form-group">
+                            <label for="meterNumber">Numéro de Compteur *</label>
+                            <div class="autocomplete-container">
+                                <input type="text" id="meterNumber" list="meterList"
+                                    placeholder="Tapez ou sélectionnez un compteur" autocomplete="off" required>
+                                <datalist id="meterList">
+                                    <!-- Les options seront ajoutées dynamiquement -->
+                                </datalist>
+                                <button type="button" class="btn-small" id="refreshMeters">
+                                    <i class="fas fa-sync-alt"></i>
+                                </button>
+                            </div>
+                            <div class="meter-stats" id="meterStats"></div>
+                        </div>
+
+                        <div class="client-info" id="clientInfo" style="display: none;">
+                            <div class="client-info-header">
+                                <h4><i class="fas fa-user-check"></i> Client Trouvé</h4>
+                                <button type="button" class="btn-small" onclick="viewClientFromToken()"
+                                    title="Voir fiche client">
+                                    <i class="fas fa-external-link-alt"></i>
+                                </button>
+                            </div>
+                            <div class="client-details">
+                                <p id="foundClientName"></p>
+                                <p id="foundClientAddress"></p>
+                                <p id="foundClientSolde"></p>
+                                <p id="foundClientConsommation"></p>
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="rechargeAmount">Montant (Ariary) *</label>
+                                <input type="number" id="rechargeAmount" min="500" step="100"
+                                    placeholder="500 Ar minimum" required oninput="calculateKwh()">
+                                <small>Montant minimum: 500 Ar (1 kWh)</small>
+                            </div>
+                            <div class="form-group">
+                                <label for="rechargeKwh">Équivalent kWh</label>
+                                <input type="number" id="rechargeKwh" min="1" step="0.001"
+                                    placeholder="Calcul automatique" oninput="calculateAmount()">
+                                <small>1 kWh = 500 Ar</small>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="tokenQuantity">Quantité de Tokens</label>
+                            <select id="tokenQuantity">
+                                <option value="1">1 Token</option>
+                                <option value="5">5 Tokens</option>
+                                <option value="10">10 Tokens</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label>
+                                <input type="checkbox" id="sendNotification">
+                                Envoyer notification au client (si en ligne)
+                            </label>
+                        </div>
+
+                        <div class="amount-presets">
+                            <p>Montants rapides :</p>
+                            <div class="preset-buttons">
+                                <button type="button" class="preset-btn" data-amount="500">500 Ar</button>
+                                <button type="button" class="preset-btn" data-amount="1000">1 000 Ar</button>
+                                <button type="button" class="preset-btn" data-amount="5000">5 000 Ar</button>
+                                <button type="button" class="preset-btn" data-amount="10000">10 000 Ar</button>
+                                <button type="button" class="preset-btn" data-amount="20000">20 000 Ar</button>
+                            </div>
+                        </div>
+
+                        <button class="btn-primary" id="generateTokenBtn">
+                            <i class="fas fa-key"></i> Générer Token(s)
+                        </button>
+                    </div>
+
+                    <div class="token-result-section" id="tokenResult" style="display: none;">
+                        <h3><i class="fas fa-check-circle"></i> Token Généré</h3>
+                        <div class="token-display">
+                            <p id="generatedToken">1234-5678-9012-3456</p>
+                            <div class="token-actions">
+                                <button class="btn-copy" data-copy="token" onclick="copyToClipboard('generatedToken')">
+                                    <i class="far fa-copy"></i> Copier
+                                </button>
+                                <button class="btn-print" onclick="printToken()">
+                                    <i class="fas fa-print"></i> Imprimer
+                                </button>
+                                <button class="btn-send" id="sendTokenBtn" onclick="sendTokenManually()">
+                                    <i class="fas fa-paper-plane"></i> Envoyer
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="token-details">
+                            <p><strong>Compteur:</strong> <span id="tokenMeter"></span></p>
+                            <p><strong>Montant:</strong> <span id="tokenAmount"></span></p>
+                            <p><strong>Énergie:</strong> <span id="tokenKwh"></span></p>
+                            <p><strong>Tarif:</strong> <span id="tokenTarif"></span></p>
+                            <p><strong>Date:</strong> <span id="tokenDate"></span></p>
+                            <p><strong>Statut:</strong> <span class="status unused">Non utilisé</span></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+<!-- Page Maintenance à distance -->
+<div id="maintenancePage" class="page">
+    <h1><i class="fas fa-wrench"></i> Maintenance à distance</h1>
     
-    <div class="tarif-banner">
-        <i class="fas fa-bolt"></i>
-        <strong>Tarif en vigueur : 500 Ariary par kWh</strong>
-        <small id="tarifInfo"></small>
-    </div>
-    
-    <div class="token-form-container">
-        <div class="form-section">
-            <h3>Informations de Recharge</h3>
+    <div class="maintenance-container">
+        <!-- Carte Monitoring MQTT -->
+        <div class="maintenance-card">
+            <div class="maintenance-title">
+                <i class="fas fa-broadcast-tower"></i>
+                Surveillance MQTT
+            </div>
             
-            <div class="form-group">
-                <label for="meterNumber">Numéro de Compteur *</label>
-                <div class="autocomplete-container">
-                    <input type="text" id="meterNumber" list="meterList" 
-                           placeholder="Tapez ou sélectionnez un compteur" 
-                           autocomplete="off" required>
-                    <datalist id="meterList">
-                        <!-- Les options seront ajoutées dynamiquement -->
-                    </datalist>
-                    <button type="button" class="btn-small" id="refreshMeters">
-                        <i class="fas fa-sync-alt"></i>
-                    </button>
-                </div>
-                <div class="meter-stats" id="meterStats"></div>
-            </div>
-
-            <div class="client-info" id="clientInfo" style="display: none;">
-                <div class="client-info-header">
-                    <h4><i class="fas fa-user-check"></i> Client Trouvé</h4>
-                    <button type="button" class="btn-small" onclick="viewClientFromToken()" title="Voir fiche client">
-                        <i class="fas fa-external-link-alt"></i>
-                    </button>
-                </div>
-                <div class="client-details">
-                    <p id="foundClientName"></p>
-                    <p id="foundClientAddress"></p>
-                    <p id="foundClientSolde"></p>
-                    <p id="foundClientConsommation"></p>
-                </div>
-            </div>
-
-            <div class="form-row">
-                <div class="form-group">
-                    <label for="rechargeAmount">Montant (Ariary) *</label>
-                    <input type="number" id="rechargeAmount" min="500" step="100" 
-                           placeholder="500 Ar minimum" required
-                           oninput="calculateKwh()">
-                    <small>Montant minimum: 500 Ar (1 kWh)</small>
-                </div>
-                <div class="form-group">
-                    <label for="rechargeKwh">Équivalent kWh</label>
-                    <input type="number" id="rechargeKwh" min="1" step="0.001"
-                           placeholder="Calcul automatique" 
-                           oninput="calculateAmount()">
-                    <small>1 kWh = 500 Ar</small>
-                </div>
-            </div>
-
-            <div class="form-group">
-                <label for="tokenQuantity">Quantité de Tokens</label>
-                <select id="tokenQuantity">
-                    <option value="1">1 Token</option>
-                    <option value="5">5 Tokens</option>
-                    <option value="10">10 Tokens</option>
+            <div class="input-group">
+                <label class="input-label" for="mqttTopicSelect">
+                    <i class="fas fa-list-alt"></i> Sélectionner un compteur :
+                </label>
+                <select id="mqttTopicSelect">
+                    <option value="">-- Chargement des compteurs --</option>
                 </select>
             </div>
-
-            <div class="form-group">
-                <label>
-                    <input type="checkbox" id="sendNotification">
-                    Envoyer notification au client (si en ligne)
-                </label>
+            
+            <div class="btn-group" style="margin-top: 15px;">
+                <button class="btn btn-primary" onclick="subscribeToMeter()">
+                    <i class="fas fa-link"></i> S'abonner
+                </button>
+                <button class="btn btn-secondary" onclick="unsubscribeFromMeter()">
+                    <i class="fas fa-unlink"></i> Se désabonner
+                </button>
             </div>
-
-            <div class="amount-presets">
-                <p>Montants rapides :</p>
-                <div class="preset-buttons">
-                    <button type="button" class="preset-btn" data-amount="500">500 Ar</button>
-                    <button type="button" class="preset-btn" data-amount="1000">1 000 Ar</button>
-                    <button type="button" class="preset-btn" data-amount="5000">5 000 Ar</button>
-                    <button type="button" class="preset-btn" data-amount="10000">10 000 Ar</button>
-                    <button type="button" class="preset-btn" data-amount="20000">20 000 Ar</button>
+            
+            <div class="status-box received" id="mqttReceivedStatus">
+                <i class="fas fa-info-circle"></i>
+                <span>En attente de données...</span>
+            </div>
+            
+            <div class="status-box sent" id="mqttSentStatus">
+                <i class="fas fa-paper-plane"></i>
+                <span>Aucune commande envoyée</span>
+            </div>
+            
+            <div class="module-info" id="meterInfo" style="display: none; margin-top: 20px;">
+                <h3><i class="fas fa-microchip"></i> Informations du Compteur</h3>
+                <div class="info-row">
+                    <div class="info-label">Topic MQTT :</div>
+                    <div class="info-value" id="infoMeterTopic">-</div>
+                </div>
+                <div class="info-row">
+                    <div class="info-label">ID Compteur :</div>
+                    <div class="info-value" id="infoMeterId">-</div>
+                </div>
+                <div class="info-row">
+                    <div class="info-label">Statut :</div>
+                    <div class="info-value" id="infoMeterStatus">
+                        <span class="badge badge-warning">Non connecté</span>
+                    </div>
+                </div>
+                <div class="info-row">
+                    <div class="info-label">Dernier message :</div>
+                    <div class="info-value" id="infoMeterLastMessage">-</div>
                 </div>
             </div>
-
-            <button class="btn-primary" id="generateTokenBtn">
-                <i class="fas fa-key"></i> Générer Token(s)
-            </button>
         </div>
-
-        <div class="token-result-section" id="tokenResult" style="display: none;">
-            <h3><i class="fas fa-check-circle"></i> Token Généré</h3>
-            <div class="token-display">
-                <p id="generatedToken">1234-5678-9012-3456</p>
-                <div class="token-actions">
-                    <button class="btn-copy" data-copy="token" onclick="copyToClipboard('generatedToken')">
-                        <i class="far fa-copy"></i> Copier
+        
+        <!-- Carte Commandes de Maintenance -->
+        <div class="maintenance-card">
+            <div class="maintenance-title">
+                <i class="fas fa-terminal"></i>
+                Commandes de Maintenance
+            </div>
+            
+            <div class="input-group">
+                <label class="input-label" for="maintenanceCommand">
+                    <i class="fas fa-code"></i> Commande à envoyer :
+                </label>
+                <input type="text" id="maintenanceCommand" class="input-field" 
+                       placeholder="Ex: relay_on, add_credit:1000, SET_COEFF:1.0V1.0C1.0P">
+            </div>
+            
+            <button class="btn btn-success" onclick="sendMaintenanceCommand()" style="width: 100%; margin-top: 10px;">
+                <i class="fas fa-paper-plane"></i> Envoyer la commande
+            </button>
+            
+            <div class="maintenance-section" style="margin-top: 25px;">
+                <div class="maintenance-title" style="font-size: 16px;">
+                    <i class="fas fa-robot"></i>
+                    Commandes prédéfinies
+                </div>
+                
+                <div class="btn-group-vertical" style="display: flex; flex-direction: column; gap: 10px; margin-top: 15px;">
+                    <button class="btn" onclick="sendRelayOn()">
+                        <i class="fas fa-power-off"></i> Activer le relai
                     </button>
-                    <button class="btn-print" onclick="printToken()">
-                        <i class="fas fa-print"></i> Imprimer
+                    <button class="btn" onclick="sendRelayOff()">
+                        <i class="fas fa-power-off"></i> Désactiver le relai
                     </button>
-                    <button class="btn-send" id="sendTokenBtn" onclick="sendTokenManually()">
-                        <i class="fas fa-paper-plane"></i> Envoyer
+                    <button class="btn" onclick="showAddCreditModal()">
+                        <i class="fas fa-coins"></i> Ajouter du crédit
+                    </button>
+                    <button class="btn" onclick="showCalibrationModal()">
+                        <i class="fas fa-sliders-h"></i> Calibrer le compteur
                     </button>
                 </div>
             </div>
             
-            <div class="token-details">
-                <p><strong>Compteur:</strong> <span id="tokenMeter"></span></p>
-                <p><strong>Montant:</strong> <span id="tokenAmount"></span></p>
-                <p><strong>Énergie:</strong> <span id="tokenKwh"></span></p>
-                <p><strong>Tarif:</strong> <span id="tokenTarif"></span></p>
-                <p><strong>Date:</strong> <span id="tokenDate"></span></p>
-                <p><strong>Statut:</strong> <span class="status unused">Non utilisé</span></p>
+            <!-- Mise à jour OTA -->
+            <div class="maintenance-section" style="margin-top: 25px;">
+                <div class="maintenance-title" style="font-size: 16px;">
+                    <i class="fas fa-download"></i>
+                    Mise à jour du Firmware
+                </div>
+                
+                <div class="input-group" style="margin-top: 15px;">
+                    <input type="text" id="firmwareUrl" class="input-field" 
+                           placeholder="URL du firmware (https://...)">
+                    <button class="btn btn-primary" onclick="updateFirmwareOTA()" style="width: 100%; margin-top: 10px;">
+                        <i class="fas fa-upload"></i> Mettre à jour
+                    </button>
+                    <small style="color: #ff6b6b; margin-top: 5px;">
+                        <i class="fas fa-exclamation-triangle"></i> Le compteur va redémarrer après la mise à jour
+                    </small>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Carte Logs d'activité -->
+        <div class="maintenance-card" style="grid-column: 1 / -1;">
+            <div class="maintenance-title">
+                <i class="fas fa-history"></i>
+                Logs d'activité
+            </div>
+            
+            <div style="max-height: 200px; overflow-y: auto; background: rgba(0,0,0,0.2); border-radius: 10px; padding: 15px;">
+                <div id="maintenanceLogs">
+                    <div class="log-entry">
+                        <i class="fas fa-info-circle" style="color: var(--primary);"></i>
+                        <span style="color: rgba(255,255,255,0.7);">Système de maintenance initialisé</span>
+                        <span style="float: right; font-size: 12px; color: rgba(255,255,255,0.5);" id="currentTime">00:00:00</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="btn-group" style="margin-top: 20px;">
+                <button class="btn btn-secondary" onclick="clearMaintenanceLogs()">
+                    <i class="fas fa-trash"></i> Effacer les logs
+                </button>
+                <button class="btn" onclick="exportMaintenanceLogs()">
+                    <i class="fas fa-download"></i> Exporter
+                </button>
             </div>
         </div>
     </div>
 </div>
-
             <!-- Pages supplémentaires seront ajoutées ici -->
         </main>
     </div>
 
     <!-- Modals -->
     <!-- Dans votre HTML -->
-<div class="modal" id="loginModal" style="display: flex;">
-    <div class="modal-content">
-        <div style="text-align: center; margin-bottom: 20px;">
-            <i class="fas fa-user-shield" style="font-size: 3rem; color: #3498db;"></i>
-            <h2>Accès Administrateur</h2>
-            <p>Veuillez vous connecter pour accéder au système</p>
-        </div>
-        
-        <form id="loginForm">
-            <div class="form-group">
-                <label for="username">
-                    <i class="fas fa-user"></i> Nom d'utilisateur
-                </label>
-                <input type="text" id="username" required placeholder="Entrez votre nom d'utilisateur">
+    <div class="modal" id="loginModal" style="display: flex;">
+        <div class="modal-content">
+            <div style="text-align: center; margin-bottom: 20px;">
+                <i class="fas fa-user-shield" style="font-size: 3rem; color: #3498db;"></i>
+                <h2>Accès Administrateur</h2>
+                <p>Veuillez vous connecter pour accéder au système</p>
             </div>
-            
-            <div class="form-group">
-                <label for="password">
-                    <i class="fas fa-lock"></i> Mot de passe
-                </label>
-                <input type="password" id="password" required placeholder="Entrez votre mot de passe">
-            </div>
-            
-            <button type="submit" class="btn-primary" style="width: 100%; padding: 12px;">
-                <i class="fas fa-sign-in-alt"></i> Se connecter
-            </button>
-            
-            <div style="margin-top: 15px; text-align: center; font-size: 0.9rem; color: #666;">
-                <p><small>Identifiants stockés dans Firebase Firestore</small></p>
-            </div>
-        </form>
-    </div>
-</div>
 
-<!-- Message de bienvenue (optionnel) -->
-<div id="welcomeMessage" style="display: none;">
-    <h1>Bienvenue sur Gestion Compteurs NLF</h1>
-    <p>Veuillez vous connecter pour accéder au système de gestion</p>
-</div>
+            <form id="loginForm">
+                <div class="form-group">
+                    <label for="username">
+                        <i class="fas fa-user"></i> Nom d'utilisateur
+                    </label>
+                    <input type="text" id="username" required placeholder="Entrez votre nom d'utilisateur">
+                </div>
+
+                <div class="form-group">
+                    <label for="password">
+                        <i class="fas fa-lock"></i> Mot de passe
+                    </label>
+                    <input type="password" id="password" required placeholder="Entrez votre mot de passe">
+                </div>
+
+                <button type="submit" class="btn-primary" style="width: 100%; padding: 12px;">
+                    <i class="fas fa-sign-in-alt"></i> Se connecter
+                </button>
+
+                <div style="margin-top: 15px; text-align: center; font-size: 0.9rem; color: #666;">
+                    <p><small>Identifiants stockés dans Firebase Firestore</small></p>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Message de bienvenue (optionnel) -->
+    <div id="welcomeMessage" style="display: none;">
+        <h1>Bienvenue sur Gestion Compteurs NLF</h1>
+        <p>Veuillez vous connecter pour accéder au système de gestion</p>
+    </div>
 
     <div id="addClientModal" class="modal">
         <!-- Formulaire d'ajout client -->
     </div>
+    <script>
+        // menu-simple.js - Version corrigée
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('Menu script chargé');
+            
+            const menuToggle = document.getElementById('menuToggle');
+            const sidebar = document.querySelector('.sidebar'); // Sélection par classe
+            const menuOverlay = document.getElementById('menuOverlay');
+            const body = document.body;
+            
+            console.log('Éléments trouvés:', { menuToggle, sidebar, menuOverlay });
+            
+            let isMobile = window.innerWidth <= 768;
+            
+            // Initialisation
+            function initMenu() {
+                if (menuToggle && sidebar && menuOverlay) {
+                    console.log('Initialisation du menu');
+                    
+                    menuToggle.addEventListener('click', toggleMenu);
+                    menuOverlay.addEventListener('click', closeMenu);
+                    
+                    // Fermer avec Escape
+                    document.addEventListener('keydown', function(e) {
+                        if (e.key === 'Escape') closeMenu();
+                    });
+                    
+                    // Fermer au clic sur un item du menu
+                    document.querySelectorAll('.menu-item').forEach(item => {
+                        item.addEventListener('click', function() {
+                            console.log('Item de menu cliqué');
+                            if (isMobile) setTimeout(closeMenu, 300);
+                        });
+                    });
+                    
+                    // Gérer le resize
+                    window.addEventListener('resize', handleResize);
+                } else {
+                    console.error('Éléments du menu non trouvés');
+                }
+            }
+            
+            function toggleMenu(e) {
+                e.stopPropagation();
+                console.log('Toggle menu, sidebar active?', sidebar.classList.contains('active'));
+                
+                if (sidebar.classList.contains('active')) {
+                    closeMenu();
+                } else {
+                    openMenu();
+                }
+            }
+            
+            function openMenu() {
+                console.log('Ouverture du menu');
+                sidebar.classList.add('active');
+                menuOverlay.classList.add('active');
+                body.classList.add('menu-open');
+                menuToggle.innerHTML = '<i class="fas fa-times"></i>';
+                menuToggle.classList.add('active');
+            }
+            
+            function closeMenu() {
+                console.log('Fermeture du menu');
+                sidebar.classList.remove('active');
+                menuOverlay.classList.remove('active');
+                body.classList.remove('menu-open');
+                menuToggle.innerHTML = '<i class="fas fa-bars"></i>';
+                menuToggle.classList.remove('active');
+            }
+            
+            function handleResize() {
+                const wasMobile = isMobile;
+                isMobile = window.innerWidth <= 768;
+                console.log('Resize - isMobile:', isMobile);
+                
+                if (wasMobile && !isMobile) {
+                    // Si on passe de mobile à desktop, fermer le menu
+                    closeMenu();
+                }
+                
+                // Si on passe à desktop, s'assurer que le menu est en position normale
+                if (!isMobile) {
+                    sidebar.style.left = '';
+                    sidebar.style.position = 'relative';
+                } else {
+                    sidebar.style.position = 'fixed';
+                }
+            }
+            
+            // Démarrer
+            initMenu();
+            
+            // Fermer le menu en cliquant en dehors
+            document.addEventListener('click', function(e) {
+                if (isMobile && 
+                    sidebar.classList.contains('active') && 
+                    !sidebar.contains(e.target) && 
+                    !menuToggle.contains(e.target)) {
+                    closeMenu();
+                }
+            });
+        });
+        // Activer/désactiver le mode cartes selon la taille d'écran
+function toggleTableCards() {
+    const tableContainer = document.querySelector('.table-container');
+    const isMobile = window.innerWidth <= 768;
+    
+    if (isMobile) {
+        // Ajouter des attributs data-label pour le mode cartes
+        document.querySelectorAll('#clientsTable thead th').forEach((th, index) => {
+            document.querySelectorAll('#clientsTable tbody td:nth-child(' + (index + 1) + ')')
+                .forEach(td => {
+                    td.setAttribute('data-label', th.textContent);
+                });
+        });
+        
+        // Activer le mode cartes
+        tableContainer.classList.add('mobile-cards');
+    } else {
+        // Désactiver le mode cartes
+        tableContainer.classList.remove('mobile-cards');
+    }
+}
 
+// Écouter les changements de taille d'écran
+window.addEventListener('resize', toggleTableCards);
+window.addEventListener('load', toggleTableCards);
+        </script>
     <!-- Scripts -->
-<!-- Scripts standards (sans modules) -->
-<script src="./firebaseAdmin.js"></script>
-<script src="./db.js"></script>
-<script src="./auth.js"></script>
-<script src="./sync.js"></script>
-<script src="./offline.js"></script>
-<script src="./app.js"></script>
+    <!-- Scripts standards (sans modules) -->
+    <script src="./firebaseAdmin.js"></script>
+    <script src="./db.js"></script>
+    <script src="./auth.js"></script>
+    <script src="./sync.js"></script>
+    <script src="./offline.js"></script>
+    <script src="./app.js"></script>
+    <script src="./maintenance.js"></script>
 </body>
+
 </html>

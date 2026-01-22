@@ -214,10 +214,58 @@ function setupEventListeners() {
 
 
 }
+// Supprimez cette fonction problématique :
+// window.searchClients = function(searchTerm) {
+//     const results = searchClients(searchTerm);
+//     displayClients(results);
+// };
+
+// Remplacez par :
 window.searchClients = function(searchTerm) {
-    const results = searchClients(searchTerm);
+    // Appeler la fonction de recherche réelle
+    const results = performClientSearch(searchTerm);
     displayClients(results);
 };
+// Fonction de recherche réelle (sans récursion)
+function performClientSearch(searchTerm) {
+    try {
+        const clients = getClientsFromLS();
+        
+        if (!searchTerm.trim()) {
+            return clients; // Retourner tous les clients si recherche vide
+        }
+        
+        const term = searchTerm.toLowerCase().trim();
+        
+        return clients.filter(client => {
+            return (
+                (client.nom && client.nom.toLowerCase().includes(term)) ||
+                (client.prenom && client.prenom.toLowerCase().includes(term)) ||
+                (client.numeroCompteur && client.numeroCompteur.toLowerCase().includes(term)) ||
+                (client.adresse && client.adresse.toLowerCase().includes(term)) ||
+                (client.telephone && client.telephone.includes(term)) ||
+                (client.email && client.email.toLowerCase().includes(term))
+            );
+        });
+    } catch (error) {
+        console.error('Erreur recherche clients:', error);
+        return [];
+    }
+}
+// Recherche client avec anti-rebond
+let searchTimeout;
+document.getElementById('clientSearch').addEventListener('input', function(e) {
+    const searchTerm = e.target.value;
+    
+    // Annuler le délai précédent
+    clearTimeout(searchTimeout);
+    
+    // Mettre un délai de 300ms avant la recherche
+    searchTimeout = setTimeout(() => {
+        const results = performClientSearch(searchTerm);
+        displayClients(results);
+    }, 300);
+});
 // Fonctions de navigation
 function switchPage(pageId) {
     // Mettre à jour le menu
@@ -1317,32 +1365,98 @@ async function handleUpdateClient(clientId) {
 }
 async function deleteClient(clientId) {
     try {
-        // Demander confirmation
-        if (!confirm('Êtes-vous sûr de vouloir supprimer ce client ? Cette action est irréversible.')) {
-            return;
-        }
-        
-        // Récupérer le client pour affichage et avoir son ID Firebase
+        // Récupérer le client pour affichage dans la confirmation
         const client = await findClientById(clientId);
         if (!client) {
             showNotification('Client non trouvé', 'info');
             return;
         }
         
-        // Vérifier s'il y a des tokens actifs
+        // 1. Afficher un popup de confirmation personnalisé
+        const confirmed = await showCustomConfirm(
+            'Confirmation de suppression',
+            `
+            <div style="text-align: left; margin-bottom: 20px;">
+                <p>Êtes-vous sûr de vouloir supprimer le client suivant ?</p>
+                <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin: 10px 0;">
+                    <p><strong>Nom:</strong> ${client.prenom} ${client.nom}</p>
+                    <p><strong>Compteur:</strong> ${client.numeroCompteur}</p>
+                    <p><strong>Téléphone:</strong> ${client.telephone || 'Non renseigné'}</p>
+                </div>
+                <p style="color: #dc3545; font-weight: bold;">
+                    ⚠️ Cette action est irréversible !
+                </p>
+            </div>
+            `,
+            {
+                confirmText: 'Supprimer',
+                confirmColor: 'danger',
+                cancelText: 'Annuler',
+                showCancel: true
+            }
+        );
+        
+        if (!confirmed) {
+            return;
+        }
+        
+        // 2. Vérifier s'il y a des tokens actifs
         const tokens = await getTokensFromDB();
         const clientTokens = tokens.filter(t => t.clientId === clientId && t.status === 'unused');
         
         if (clientTokens.length > 0) {
-            showNotification(`Impossible de supprimer ce client. Il a ${clientTokens.length} token(s) non utilisé(s).`, 'info');
+            await showCustomAlert(
+                'Impossible de supprimer',
+                `
+                <div style="text-align: left;">
+                    <p>Ce client ne peut pas être supprimé car il possède <strong>${clientTokens.length} token(s) non utilisé(s)</strong>.</p>
+                    <p style="margin-top: 15px;">Veuillez d'abord :</p>
+                    <ul style="margin-left: 20px; margin-top: 10px;">
+                        <li>Utiliser ou invalider les tokens non utilisés, ou</li>
+                        <li>Transférer le client vers un autre gestionnaire</li>
+                    </ul>
+                </div>
+                `,
+                'warning'
+            );
             return;
         }
         
-        // 1. Supprimer le client localement d'abord
+        // 3. Demander confirmation finale si le client a des tokens utilisés
+        const usedTokens = tokens.filter(t => t.clientId === clientId && t.status === 'used');
+        if (usedTokens.length > 0) {
+            const finalConfirm = await showCustomConfirm(
+                'Confirmation finale',
+                `
+                <div style="text-align: left;">
+                    <p>Ce client a <strong>${usedTokens.length} token(s) déjà utilisé(s)</strong> dans son historique.</p>
+                    <p style="color: #dc3545; margin-top: 15px;">
+                        ⚠️ La suppression effacera également l'historique des transactions.
+                    </p>
+                    <p>Souhaitez-vous vraiment continuer ?</p>
+                </div>
+                `,
+                {
+                    confirmText: 'Oui, supprimer quand même',
+                    confirmColor: 'danger',
+                    cancelText: 'Annuler',
+                    showCancel: true
+                }
+            );
+            
+            if (!finalConfirm) {
+                return;
+            }
+        }
+        
+        // 4. Supprimer le client localement d'abord
         const localResult = await deleteClientFromDB(clientId);
         
         if (localResult) {
-            // 2. Si en ligne et Firebase disponible, supprimer aussi sur Firebase
+            // 5. Afficher une notification de progression
+            showNotification('Suppression en cours...', 'info');
+            
+            // 6. Si en ligne et Firebase disponible, supprimer aussi sur Firebase
             let firebaseResult = null;
             if (navigator.onLine && window.firebaseService && client.firebaseId) {
                 try {
@@ -1372,13 +1486,13 @@ async function deleteClient(clientId) {
                 });
             }
             
-            // Recharger la liste des clients
+            // 7. Recharger la liste des clients
             await loadClients();
             
-            // Mettre à jour le dashboard
+            // 8. Mettre à jour le dashboard
             await loadDashboardData();
             
-            // Journaliser l'action
+            // 9. Journaliser l'action
             await saveLogToLocal({
                 action: 'suppression_client',
                 details: `Client supprimé: ${client.prenom} ${client.nom} (${client.numeroCompteur})`,
@@ -1386,7 +1500,7 @@ async function deleteClient(clientId) {
                 firebaseSuccess: firebaseResult ? firebaseResult.success : false
             });
             
-            // Journaliser Firebase si disponible et suppression réussie
+            // 10. Journaliser Firebase si disponible et suppression réussie
             if (window.firebaseService && navigator.onLine && firebaseResult && firebaseResult.success) {
                 await window.firebaseService.logAction(
                     'suppression_client',
@@ -1394,6 +1508,7 @@ async function deleteClient(clientId) {
                 );
             }
             
+            // 11. Afficher une notification de succès
             showNotification(`Client ${client.prenom} ${client.nom} supprimé avec succès`, 'success');
             
         } else {
@@ -1404,6 +1519,186 @@ async function deleteClient(clientId) {
         console.error('Erreur suppression client:', error);
         showNotification('Erreur lors de la suppression du client: ' + error.message, 'info');
     }
+}
+
+// Fonction pour afficher une confirmation personnalisée
+function showCustomConfirm(title, message, options = {}) {
+    return new Promise((resolve) => {
+        // Options par défaut
+        const defaultOptions = {
+            confirmText: 'Confirmer',
+            confirmColor: 'primary',
+            cancelText: 'Annuler',
+            showCancel: true,
+            width: '400px'
+        };
+        
+        const config = { ...defaultOptions, ...options };
+        
+        // Créer le modal
+        const modal = document.createElement('div');
+        modal.className = 'custom-modal';
+        modal.style.position = 'fixed';
+        modal.style.top = '0';
+        modal.style.left = '0';
+        modal.style.width = '100%';
+        modal.style.height = '100%';
+        modal.style.backgroundColor = 'rgba(0, 0, 0, 0.5)';
+        modal.style.display = 'flex';
+        modal.style.justifyContent = 'center';
+        modal.style.alignItems = 'center';
+        modal.style.zIndex = '9999';
+        
+        // Créer le contenu
+        const content = document.createElement('div');
+        content.className = 'custom-modal-content';
+        content.style.backgroundColor = 'white';
+        content.style.borderRadius = '10px';
+        content.style.padding = '25px';
+        content.style.width = config.width;
+        content.style.maxWidth = '90%';
+        content.style.boxShadow = '0 5px 20px rgba(0,0,0,0.3)';
+        content.style.animation = 'fadeIn 0.3s ease-in-out';
+        
+        // Titre
+        const titleElement = document.createElement('h3');
+        titleElement.style.marginTop = '0';
+        titleElement.style.marginBottom = '15px';
+        titleElement.style.color = '#333';
+        titleElement.innerHTML = `<i class="fas fa-exclamation-triangle" style="color: #dc3545; margin-right: 10px;"></i>${title}`;
+        
+        // Message
+        const messageElement = document.createElement('div');
+        messageElement.innerHTML = message;
+        
+        // Boutons
+        const buttonsContainer = document.createElement('div');
+        buttonsContainer.style.display = 'flex';
+        buttonsContainer.style.justifyContent = 'flex-end';
+        buttonsContainer.style.gap = '10px';
+        buttonsContainer.style.marginTop = '25px';
+        
+        if (config.showCancel) {
+            const cancelBtn = document.createElement('button');
+            cancelBtn.className = 'btn btn-secondary';
+            cancelBtn.innerHTML = config.cancelText;
+            cancelBtn.onclick = () => {
+                document.body.removeChild(modal);
+                resolve(false);
+            };
+            buttonsContainer.appendChild(cancelBtn);
+        }
+        
+        const confirmBtn = document.createElement('button');
+        confirmBtn.className = `btn btn-${config.confirmColor}`;
+        confirmBtn.innerHTML = config.confirmText;
+        confirmBtn.onclick = () => {
+            document.body.removeChild(modal);
+            resolve(true);
+        };
+        buttonsContainer.appendChild(confirmBtn);
+        
+        // Assembler le modal
+        content.appendChild(titleElement);
+        content.appendChild(messageElement);
+        content.appendChild(buttonsContainer);
+        modal.appendChild(content);
+        
+        // Ajouter au document
+        document.body.appendChild(modal);
+        
+        // Fermer en cliquant en dehors
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) {
+                document.body.removeChild(modal);
+                resolve(false);
+            }
+        });
+    });
+}
+
+// Fonction pour afficher une alerte personnalisée
+function showCustomAlert(title, message, type = 'info') {
+    return new Promise((resolve) => {
+        // Définir les icônes selon le type
+        const icons = {
+            info: 'fas fa-info-circle',
+            warning: 'fas fa-exclamation-triangle',
+            error: 'fas fa-times-circle',
+            success: 'fas fa-check-circle'
+        };
+        
+        const colors = {
+            info: '#17a2b8',
+            warning: '#ffc107',
+            error: '#dc3545',
+            success: '#28a745'
+        };
+        
+        // Créer le modal
+        const modal = document.createElement('div');
+        modal.className = 'custom-modal';
+        modal.style.position = 'fixed';
+        modal.style.top = '0';
+        modal.style.left = '0';
+        modal.style.width = '100%';
+        modal.style.height = '100%';
+        modal.style.backgroundColor = 'rgba(0, 0, 0, 0.5)';
+        modal.style.display = 'flex';
+        modal.style.justifyContent = 'center';
+        modal.style.alignItems = 'center';
+        modal.style.zIndex = '9999';
+        
+        // Créer le contenu
+        const content = document.createElement('div');
+        content.className = 'custom-modal-content';
+        content.style.backgroundColor = 'white';
+        content.style.borderRadius = '10px';
+        content.style.padding = '25px';
+        content.style.width = '400px';
+        content.style.maxWidth = '90%';
+        content.style.boxShadow = '0 5px 20px rgba(0,0,0,0.3)';
+        content.style.animation = 'fadeIn 0.3s ease-in-out';
+        
+        // Titre
+        const titleElement = document.createElement('h3');
+        titleElement.style.marginTop = '0';
+        titleElement.style.marginBottom = '15px';
+        titleElement.style.color = '#333';
+        titleElement.innerHTML = `<i class="${icons[type]}" style="color: ${colors[type]}; margin-right: 10px;"></i>${title}`;
+        
+        // Message
+        const messageElement = document.createElement('div');
+        messageElement.innerHTML = message;
+        
+        // Bouton OK
+        const okBtn = document.createElement('button');
+        okBtn.className = 'btn btn-primary';
+        okBtn.innerHTML = 'OK';
+        okBtn.style.marginTop = '25px';
+        okBtn.style.float = 'right';
+        okBtn.onclick = () => {
+            document.body.removeChild(modal);
+            resolve();
+        };
+        
+        // Assembler le modal
+        content.appendChild(titleElement);
+        content.appendChild(messageElement);
+        content.appendChild(okBtn);
+        modal.appendChild(content);
+        
+        // Ajouter au document
+        document.body.appendChild(modal);
+        
+        // Fermer en cliquant en dehors
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) {
+                document.body.removeChild(modal);
+                resolve();
+            }
+        });
+    });
 }
 
 async function deleteClientFromDB(clientId) {

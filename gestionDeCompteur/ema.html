@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        input {
+            padding: 10px;
+            border-radius: 10px;
+
+        }
+    </style>
+</head>
+
+<body>
+    <label for="">Date de Naissance</label>
+    <input class="ema" id="dateNateragna" type="text" placeholder="entre votre date des naissance">
+    <label>date D'aujourd'hui</label>
+    <input type="text" id="dateNiany" placeholder="date D'aujourd'hui" style="margin-bottom: 10px;">
+
+    <button onclick="caclculeAge()"> Calculer</button>
+    <p>
+        enao dia teraka ny : <span id="age"></span>
+    </p>
+</body>
+<script>
+    function caclculeAge () {
+        let dateNateragna = document.getElementById("dateNateragna").value
+        console.log(dateNateragna);
+        let dateNiany = document.getElementById("dateNiany").value
+        console.log(dateNiany);
+        let result = dateNiany - dateNateragna
+        if(result){
+            document.getElementById('age').innerHTML = result;
+        }
+    }
+   
+</script>
+
+</html>

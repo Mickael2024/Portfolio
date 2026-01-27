@@ -10,6 +10,7 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
     <!-- <link rel="manifest" href="manifest.json"> -->
+    <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
 </head>
 
 <body>
@@ -409,7 +410,7 @@
                 Logs d'activité
             </div>
             
-            <div style="max-height: 200px; overflow-y: auto; background: rgba(0,0,0,0.2); border-radius: 10px; padding: 15px;">
+            <div style="max-height: 200px; overflow-y: auto; background: rgb(0, 0, 0); border-radius: 10px; padding: 15px;">
                 <div id="maintenanceLogs">
                     <div class="log-entry">
                         <i class="fas fa-info-circle" style="color: var(--primary);"></i>
@@ -617,6 +618,7 @@ window.addEventListener('load', toggleTableCards);
     <script src="./offline.js"></script>
     <script src="./app.js"></script>
     <script src="./maintenance.js"></script>
+    <script src="./debug-mqtt.js"></script>
 </body>
 
 </html>
